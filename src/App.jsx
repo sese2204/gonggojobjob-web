@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-// 💡 알림(Bell), 메일(Mail) 아이콘을 추가했습니다.
-import { Search, Bookmark, ChevronRight, CheckCircle2, X, Database, Briefcase, Coffee, Bell, Mail } from 'lucide-react';
+import { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { Search, Bookmark, ChevronRight, CheckCircle2, X, Database, Briefcase, Coffee, Bell, Mail, LogOut, User } from 'lucide-react';
+import { useAuth } from './contexts/AuthContext';
+import { searchJobs } from './api/jobs';
+import OAuthCallback from './pages/OAuthCallback';
 
 const TAG_DATA = {
   '💻 개발': ['Java', 'Spring Boot', 'Python', 'AWS', 'JPA', 'React', 'Node.js', 'AI/ML', '데이터 엔지니어링'],
@@ -20,15 +23,17 @@ const PLACEHOLDER_DATA = {
   '📝 미디어/홍보': '예: 기업 인스타나 유튜브 기획해본 경험 있음. 트렌디하고 자유로운 회사 가고 싶다!'
 };
 
-export default function AIJobMatcher() {
+function HomePage() {
+  const { isLoggedIn, isLoading, user, login, logout } = useAuth();
   const [step, setStep] = useState('input');
   const [selectedTags, setSelectedTags] = useState([]);
   const [query, setQuery] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeCategory, setActiveCategory] = useState('💻 개발'); 
+  const [activeCategory, setActiveCategory] = useState('💻 개발');
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchError, setSearchError] = useState(null);
 
   const toggleTag = (tag) => {
-    setSelectedTags((prev) => 
+    setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   };
@@ -37,11 +42,28 @@ export default function AIJobMatcher() {
     setSelectedTags((prev) => prev.filter((t) => t !== tag));
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (selectedTags.length === 0 && query.trim() === '') return;
     setStep('loading');
-    setTimeout(() => setStep('results'), 1500);
+    setSearchError(null);
+
+    try {
+      const res = await searchJobs({ tags: selectedTags, query });
+      setSearchResults(res.data);
+      setStep('results');
+    } catch (err) {
+      setSearchError(err.response?.data?.message || '검색 중 오류가 발생했습니다.');
+      setStep('input');
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col">
@@ -49,15 +71,28 @@ export default function AIJobMatcher() {
         <div className="text-xl font-extrabold text-blue-600 tracking-tight flex items-center gap-2">
           👀 공고줍줍
         </div>
-        <div className="flex space-x-4">
+        <div className="flex items-center space-x-4">
           {isLoggedIn ? (
-            <button className="flex items-center space-x-2 text-sm text-gray-600 hover:text-blue-600">
-              <Bell size={18} />
-              <span>내 알림 설정</span>
-            </button>
+            <>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                {user?.profileImageUrl ? (
+                  <img src={user.profileImageUrl} alt="" className="w-7 h-7 rounded-full" />
+                ) : (
+                  <User size={18} />
+                )}
+                <span className="font-medium">{user?.name}</span>
+              </div>
+              <button
+                onClick={logout}
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-500 transition-colors"
+              >
+                <LogOut size={16} />
+                로그아웃
+              </button>
+            </>
           ) : (
-            <button 
-              onClick={() => setIsLoggedIn(true)}
+            <button
+              onClick={login}
               className="text-sm px-4 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 font-medium transition-colors flex items-center gap-1.5"
             >
               <Bell size={14} /> 새 공고 알림받기
@@ -75,9 +110,15 @@ export default function AIJobMatcher() {
               직군 키워드 고르고, 원하는 조건을 대충 텍스트로 적어주시면 AI가 찰떡같이 찾아드려요! (다들 취뽀 화이팅 🍀)
             </p>
 
+            {searchError && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                {searchError}
+              </div>
+            )}
+
             <div className="mb-8">
               <label className="block text-sm font-bold text-gray-700 mb-3">1. 관심 키워드 콕 집어주세요</label>
-              
+
               <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-100 pb-4">
                 {Object.keys(TAG_DATA).map((category) => (
                   <button
@@ -145,13 +186,12 @@ export default function AIJobMatcher() {
               <span>{selectedTags.length > 0 ? `${selectedTags.length}개 키워드로 ` : ''}내 조건에 맞는 공고 찾아보기</span>
             </button>
 
-            {/* 💡 검색 전 가벼운 넛지(Nudge): 버튼 바로 아래에 배치 */}
             {!isLoggedIn && (
               <div className="mt-4 text-center">
                 <p className="text-sm text-gray-500 flex items-center justify-center gap-1.5">
                   <Bell size={14} className="text-blue-500" />
-                  매일 접속해서 검색하기 귀찮으신가요? 
-                  <button onClick={() => setIsLoggedIn(true)} className="text-blue-600 font-bold hover:underline ml-1">
+                  매일 접속해서 검색하기 귀찮으신가요?
+                  <button onClick={login} className="text-blue-600 font-bold hover:underline ml-1">
                     로그인하고 새 공고 알아서 배달받기
                   </button>
                 </p>
@@ -167,14 +207,19 @@ export default function AIJobMatcher() {
           </div>
         )}
 
-        {step === 'results' && (
+        {step === 'results' && searchResults && (
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-end mb-6">
               <div>
                 <h2 className="text-2xl font-bold mb-1">짜잔! AI가 찾은 추천 공고 🎉</h2>
-                <p className="text-sm text-gray-500">작성해주신 조건이랑 제일 잘 맞는 곳들로 뽑아봤어요.</p>
+                <p className="text-sm text-gray-500">
+                  총 {searchResults.totalCount}개 중 매칭률 높은 공고를 뽑았어요.
+                  {searchResults.newTodayCount > 0 && (
+                    <span className="ml-2 text-blue-600 font-medium">오늘 새로 올라온 공고 {searchResults.newTodayCount}개!</span>
+                  )}
+                </p>
               </div>
-              <button 
+              <button
                 onClick={() => setStep('input')}
                 className="text-sm text-blue-600 hover:underline flex items-center bg-blue-50 px-3 py-1.5 rounded-lg font-medium"
               >
@@ -183,12 +228,8 @@ export default function AIJobMatcher() {
             </div>
 
             <div className="space-y-4">
-              {[
-                { title: '조직문화 및 HR 담당자 신입/경력', company: '스타트업 넥스트', match: 96, reason: '원하시는 직무(인사) 일치하고, 워라밸 좋은 유연근무제 회사예요!' },
-                { title: '글로벌 B2B 해외영업팀 (영어능통자)', company: '(주)글로벌네트웍스', match: 91, reason: '해외영업 포지션에 영어 역량을 가장 중요하게 보는 곳입니다.' },
-                { title: '브랜드 SNS 홍보/콘텐츠 마케터', company: '크리에이티브 미디어', match: 87, reason: '자율 출퇴근제 운영 중이고, SNS 경험 우대한다고 적혀있어요.' }
-              ].map((job, idx) => (
-                <div key={idx} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex justify-between items-center group">
+              {searchResults.jobs.map((job) => (
+                <div key={job.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex justify-between items-center group">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <span className="bg-blue-50 text-blue-700 text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
@@ -205,15 +246,19 @@ export default function AIJobMatcher() {
                     <button className="text-gray-300 hover:text-blue-500 transition-colors">
                       <Bookmark size={24} />
                     </button>
-                    <button className="bg-gray-900 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors">
+                    <a
+                      href={job.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-gray-900 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors"
+                    >
                       공고 보러가기
-                    </button>
+                    </a>
                   </div>
                 </div>
               ))}
             </div>
-            
-            {/* 💡 검색 결과 확인 후 강력한 CTA: 매일 배달해 준다는 이점을 명확히 강조 */}
+
             {!isLoggedIn && (
               <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-6 md:p-8 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex-1">
@@ -226,8 +271,8 @@ export default function AIJobMatcher() {
                     제가 <strong>매일 아침 새로 올라온 맞춤 공고만 쏙쏙 골라서</strong> 알려드릴게요.
                   </p>
                 </div>
-                <button 
-                  onClick={() => setIsLoggedIn(true)}
+                <button
+                  onClick={login}
                   className="w-full md:w-auto bg-blue-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-blue-700 shadow-md transition-all hover:scale-105 whitespace-nowrap"
                 >
                   3초만에 가입하고 알림 받기
@@ -261,5 +306,14 @@ export default function AIJobMatcher() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/oauth/callback" element={<OAuthCallback />} />
+    </Routes>
   );
 }
