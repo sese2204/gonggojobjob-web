@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Search, ChevronRight, CheckCircle2, X, Database, Briefcase, Coffee, Bell, Mail, LogOut, User, Clock, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { searchJobs, getStats } from './api/jobs';
 import { getRecommendedJobs, deleteRecommendedJob } from './api/searchHistory';
 import OAuthCallback from './pages/OAuthCallback';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
 
 const TAG_DATA = {
-  '💻 개발': ['Java', 'Spring Boot', 'Python', 'AWS', 'JPA', 'React', 'Node.js', 'AI/ML', '데이터 엔지니어링'],
-  '🎨 기획/디자인': ['서비스 기획', 'UX/UI 디자인', 'Figma', '프로덕트 매니저(PM)', '데이터 분석', 'Adobe XD'],
-  '📈 마케팅/비즈니스': ['퍼포먼스 마케팅', '콘텐츠 마케팅', 'B2B 영업', 'GA4', '브랜드 마케팅', 'CRM'],
-  '💼 경영/사무/인사': ['인사(HR)', '총무', '재무/회계', '경영기획', '법무', '사무보조', '조직문화'],
-  '🤝 영업/고객상담': ['국내영업', '해외영업', 'CS(고객지원)', '영업기획', '인바운드', '아웃바운드'],
-  '📝 미디어/홍보': ['언론보도', '사내방송', 'SNS운영', '카피라이팅', '영상편집', '기자/에디터']
+  '💻 개발': ['Java', 'Spring Boot', 'Python', 'React', 'TypeScript', 'Node.js', 'AWS', 'Docker/K8s', 'AI/ML', 'Flutter', 'Go', '데이터 엔지니어링'],
+  '🎨 기획/디자인': ['서비스 기획', 'UX/UI 디자인', 'Figma', '프로덕트 매니저(PM)', '프로덕트 오너(PO)', '데이터 분석', 'A/B 테스트', 'UX 리서치'],
+  '📈 마케팅/비즈니스': ['퍼포먼스 마케팅', '콘텐츠 마케팅', 'GA4', '브랜드 마케팅', 'CRM', 'SEO', '그로스 해킹', '인플루언서 마케팅'],
+  '💼 경영/사무/인사': ['인사(HR)', '채용 담당자', '재무/회계', '경영기획', '법무', '총무', '조직문화', 'ESG'],
+  '🤝 영업/고객상담': ['국내영업', '해외영업', 'B2B 영업', 'CS(고객지원)', '영업기획', 'CX(고객경험)', '기술영업(SE)'],
+  '📝 미디어/콘텐츠': ['숏폼 콘텐츠', '유튜브 운영', 'SNS운영', '카피라이팅', '영상편집', '브랜드 콘텐츠', 'PR/홍보']
 };
 
 const PLACEHOLDER_DATA = {
@@ -21,7 +24,7 @@ const PLACEHOLDER_DATA = {
   '📈 마케팅/비즈니스': '예: GA4로 전환 퍼널 분석하고 광고 ROAS 300% 달성한 경험 있어요. 퍼포먼스 마케팅이랑 데이터 분석 같이 할 수 있는 수평적인 곳 원함!',
   '💼 경영/사무/인사': '예: 스타트업에서 채용 프로세스 세팅부터 온보딩 설계까지 해봤어요. 채용부터 평가보상까지 해볼 수 있는 HR 직무, 워라밸 보장되는 중견기업 이상!',
   '🤝 영업/고객상담': '예: IT SaaS 제품 B2B 영업 1년 했고 영어로 해외 클라이언트 미팅 가능해요. 해외영업 경험 살릴 수 있는 글로벌 기업 찾음!',
-  '📝 미디어/홍보': '예: 기업 인스타 팔로워 2만→8만 성장시킨 경험 있고 숏폼 영상 기획/편집 가능해요. 트렌디하고 자유로운 회사에서 콘텐츠 만들고 싶다!'
+  '📝 미디어/콘텐츠': '예: 기업 인스타 팔로워 2만→8만 성장시킨 경험 있고 숏폼 영상 기획/편집 가능해요. 트렌디하고 자유로운 회사에서 콘텐츠 만들고 싶다!'
 };
 
 // sessionStorage 헬퍼 (비로그인 검색 결과 새로고침 유지용)
@@ -201,9 +204,8 @@ function MyRecommendedJobs({ onGoSearch }) {
               <button
                 onClick={() => handleDelete(job.id)}
                 disabled={deletingId === job.id}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors inline-flex items-center gap-1.5 disabled:opacity-50"
+                className="text-base text-gray-400 hover:text-red-500 font-medium transition-colors disabled:opacity-50"
               >
-                <X size={14} />
                 {deletingId === job.id ? '삭제 중...' : '삭제'}
               </button>
             </div>
@@ -235,7 +237,7 @@ function MyRecommendedJobs({ onGoSearch }) {
 }
 
 function HomePage() {
-  const { isLoggedIn, isLoading, user, login, logout } = useAuth();
+  const { isLoggedIn, isLoading, user, login: authLogin, logout } = useAuth();
 
   // 비로그인 시 sessionStorage에서 검색 결과 복원
   const savedState = !isLoading && !isLoggedIn ? loadSessionState() : null;
@@ -249,6 +251,14 @@ function HomePage() {
   const [searchError, setSearchError] = useState(null);
   const [stats, setStats] = useState(null);
 
+  // 로그인 시 현재 검색 조건을 저장한 뒤 OAuth로 이동
+  const login = () => {
+    if (selectedTags.length > 0 || query.trim() !== '') {
+      localStorage.setItem('pendingSearch', JSON.stringify({ tags: selectedTags, query }));
+    }
+    authLogin();
+  };
+
   // 통계 로드
   useEffect(() => {
     getStats()
@@ -256,10 +266,31 @@ function HomePage() {
       .catch(() => {});
   }, []);
 
-  // 로그인 상태 변경 시 view 업데이트
+  // 로그인 완료 후 pendingSearch가 있으면 자동 재검색 (서버에 저장됨)
   useEffect(() => {
-    if (!isLoading) {
-      setView(isLoggedIn ? 'my-jobs' : 'search');
+    if (!isLoading && isLoggedIn) {
+      const pending = localStorage.getItem('pendingSearch');
+      if (pending) {
+        localStorage.removeItem('pendingSearch');
+        const { tags, query: q } = JSON.parse(pending);
+        setSelectedTags(tags || []);
+        setQuery(q || '');
+        setView('search');
+        setStep('loading');
+        searchJobs({ tags: tags || [], query: q || '' })
+          .then((res) => {
+            setSearchResults(res.data);
+            setStep('results');
+          })
+          .catch(() => {
+            setView('my-jobs');
+            setStep('input');
+          });
+        return;
+      }
+      setView('my-jobs');
+    } else if (!isLoading && !isLoggedIn) {
+      setView('search');
     }
   }, [isLoggedIn, isLoading]);
 
@@ -282,6 +313,17 @@ function HomePage() {
 
   const handleSearch = async () => {
     if (selectedTags.length === 0 && query.trim() === '') return;
+
+    // 비로그인 세션당 2회 제한
+    if (!isLoggedIn) {
+      const count = parseInt(sessionStorage.getItem('searchCount') || '0', 10);
+      if (count >= 2) {
+        setSearchError('비로그인 상태에서는 2번까지만 검색할 수 있어요. 로그인하면 더 많이 검색할 수 있어요!');
+        return;
+      }
+      sessionStorage.setItem('searchCount', String(count + 1));
+    }
+
     setStep('loading');
     setSearchError(null);
 
@@ -290,6 +332,11 @@ function HomePage() {
       setSearchResults(res.data);
       setStep('results');
     } catch (err) {
+      // 검색 실패 시 비로그인 카운트 롤백
+      if (!isLoggedIn) {
+        const count = parseInt(sessionStorage.getItem('searchCount') || '0', 10);
+        if (count > 0) sessionStorage.setItem('searchCount', String(count - 1));
+      }
       setSearchError(err.response?.data?.message || '검색 중 오류가 발생했습니다.');
       setStep('input');
     }
@@ -382,8 +429,16 @@ function HomePage() {
             </p>
 
             {searchError && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-                {searchError}
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <span>{searchError}</span>
+                {!isLoggedIn && searchError.includes('비로그인') && (
+                  <button
+                    onClick={login}
+                    className="shrink-0 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors"
+                  >
+                    로그인하기
+                  </button>
+                )}
               </div>
             )}
 
@@ -588,6 +643,11 @@ function HomePage() {
           <p className="text-center text-xs text-gray-600 mt-3 flex items-center justify-center gap-1.5">
             <Mail size={12} /> 피드백 및 문의: <a href="mailto:sese2204@gmail.com" className="text-blue-400 hover:underline">sese2204@gmail.com</a>
           </p>
+          <div className="flex justify-center items-center gap-3 mt-4 text-xs text-gray-500">
+            <Link to="/privacy" className="hover:text-gray-300 transition-colors">개인정보처리방침</Link>
+            <span className="text-gray-700">|</span>
+            <Link to="/terms" className="hover:text-gray-300 transition-colors">이용약관</Link>
+          </div>
         </div>
       </footer>
     </div>
@@ -599,6 +659,8 @@ export default function App() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/oauth/callback" element={<OAuthCallback />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<Terms />} />
     </Routes>
   );
 }
