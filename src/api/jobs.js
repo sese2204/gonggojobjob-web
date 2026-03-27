@@ -5,3 +5,6 @@ export const searchJobs = ({ tags, query }) =>
 
 export const getSearchConfig = () =>
   client.get('/api/jobs/search/config');
+
+export const getStats = () =>
+  client.get('/api/stats');

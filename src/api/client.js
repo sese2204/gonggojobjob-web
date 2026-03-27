@@ -4,6 +4,17 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const client = axios.create({
   baseURL: API_BASE_URL,
+  paramsSerializer: (params) => {
+    const parts = [];
+    for (const [key, value] of Object.entries(params)) {
+      if (Array.isArray(value)) {
+        value.forEach((v) => parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(v)}`));
+      } else if (value != null) {
+        parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
+      }
+    }
+    return parts.join('&');
+  },
 });
 
 // Request: accessToken 자동 첨부

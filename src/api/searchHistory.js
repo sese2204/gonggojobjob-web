@@ -8,3 +8,6 @@ export const getSearchDetail = (searchId) =>
 
 export const getRecommendedJobs = (params) =>
   client.get('/api/search-history/recommended-jobs', { params });
+
+export const deleteRecommendedJob = (recommendedJobId) =>
+  client.delete(`/api/search-history/recommended-jobs/${recommendedJobId}`);
