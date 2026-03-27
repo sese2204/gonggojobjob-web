@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { Search, ChevronRight, CheckCircle2, X, Database, Briefcase, Coffee, Bell, Mail, LogOut, User, Clock, ExternalLink } from 'lucide-react';
+import { Search, ChevronRight, CheckCircle2, X, Database, Briefcase, Coffee, Bell, Mail, LogOut, User, Clock, ExternalLink, Heart, Send, MessageCircle, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { searchJobs, getStats } from './api/jobs';
 import { getRecommendedJobs, deleteRecommendedJob } from './api/searchHistory';
+import { getCheers, postCheer } from './api/cheers';
 import OAuthCallback from './pages/OAuthCallback';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
@@ -65,6 +66,34 @@ function CoffeeSide() {
             혼자서 서버 돌리고 AI API 비용 내면서 운영 중입니다... 커피 한 잔이면 서버비 하루치가 돼요 🥲
           </p>
           <div className="bg-gray-50 rounded-lg px-3 py-2">
+            <p className="text-[10px] text-gray-400 mb-0.5">국민은행</p>
+            <p className="text-xs text-gray-800 font-mono font-bold">828202-04-310820</p>
+          </div>
+          <p className="text-[10px] text-gray-400 mt-2">작은 후원이 큰 힘이 됩니다!</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CoffeeMobile() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="lg:hidden mt-6">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center hover:shadow-md transition-shadow"
+      >
+        <span className="text-xl">☕</span>
+        <span className="text-sm font-bold text-gray-800 ml-2">개발자에게 커피 사주기</span>
+      </button>
+      {open && (
+        <div className="mt-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center animate-fade-in-up">
+          <p className="text-xs text-gray-500 leading-relaxed mb-4">
+            혼자서 서버 돌리고 AI API 비용 내면서 운영 중입니다... 커피 한 잔이면 서버비 하루치가 돼요 🥲
+          </p>
+          <div className="bg-gray-50 rounded-lg px-3 py-2 inline-block">
             <p className="text-[10px] text-gray-400 mb-0.5">국민은행</p>
             <p className="text-xs text-gray-800 font-mono font-bold">828202-04-310820</p>
           </div>
@@ -149,7 +178,7 @@ function MyRecommendedJobs({ onGoSearch }) {
 
   return (
     <div>
-      <div className="flex justify-between items-end mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6">
         <div>
           <h2 className="text-2xl font-bold mb-1">내 추천 공고 📋</h2>
           <p className="text-sm text-gray-500">AI가 매칭해준 공고들이에요.</p>
@@ -175,9 +204,9 @@ function MyRecommendedJobs({ onGoSearch }) {
 
       <div className="space-y-4">
         {jobs.map((job) => (
-          <div key={job.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex justify-between items-center group">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-2">
+          <div key={job.id} className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-2">
                 <span className="bg-blue-50 text-blue-700 text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
                   <CheckCircle2 size={12} /> AI 찰떡 지수 {job.matchScore}%
                 </span>
@@ -192,7 +221,7 @@ function MyRecommendedJobs({ onGoSearch }) {
                 🤖 <strong>AI 코멘트:</strong> {job.reason}
               </p>
             </div>
-            <div className="flex flex-col items-end space-y-3">
+            <div className="flex items-center gap-3 mt-4">
               <a
                 href={job.url}
                 target="_blank"
@@ -233,6 +262,164 @@ function MyRecommendedJobs({ onGoSearch }) {
         </div>
       )}
     </div>
+  );
+}
+
+const CHEER_COLORS = [
+  'bg-amber-50 border-amber-100',
+  'bg-rose-50 border-rose-100',
+  'bg-sky-50 border-sky-100',
+  'bg-emerald-50 border-emerald-100',
+  'bg-violet-50 border-violet-100',
+  'bg-orange-50 border-orange-100',
+];
+
+function CheersSection() {
+  const [cheers, setCheers] = useState([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [nickname, setNickname] = useState('');
+  const [content, setContent] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitDone, setSubmitDone] = useState(false);
+
+  const fetchCheers = async (pageNum, append = false) => {
+    setLoading(true);
+    try {
+      const res = await getCheers({ page: pageNum, size: 20 });
+      const newCheers = res.data.content || [];
+      setCheers((prev) => append ? [...prev, ...newCheers] : newCheers);
+      setHasMore(!res.data.last);
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCheers(0);
+  }, []);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchCheers(nextPage, true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const trimmed = content.trim();
+    if (!trimmed) return;
+    setSubmitting(true);
+    try {
+      await postCheer({ nickname: nickname.trim() || '익명의 취준생', content: trimmed });
+      setNickname('');
+      setContent('');
+      setSubmitDone(true);
+      setTimeout(() => setSubmitDone(false), 2500);
+      setPage(0);
+      fetchCheers(0);
+    } catch {
+      // ignore
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const timeAgo = (dateStr) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return '방금 전';
+    if (mins < 60) return `${mins}분 전`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}시간 전`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}일 전`;
+    return new Date(dateStr).toLocaleDateString('ko-KR');
+  };
+
+  return (
+    <section className="max-w-4xl mx-auto px-4 py-12">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
+          <Heart size={22} className="text-rose-400 fill-rose-400" />
+          취준생 응원 한마디
+        </h2>
+        <p className="text-sm text-gray-500 mt-2">힘든 취준 길, 서로 응원 한마디 남겨요. 당신의 한마디가 누군가에게 큰 힘이 됩니다.</p>
+      </div>
+
+      {/* 응원글 작성 */}
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-8">
+        <div className="flex flex-col sm:flex-row gap-3 mb-3">
+          <input
+            type="text"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value.slice(0, 20))}
+            placeholder="닉네임 (선택)"
+            className="w-full sm:w-32 shrink-0 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-rose-300 focus:border-transparent outline-none"
+          />
+          <input
+            type="text"
+            value={content}
+            onChange={(e) => setContent(e.target.value.slice(0, 500))}
+            placeholder="따뜻한 응원 한마디를 남겨주세요..."
+            className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-rose-300 focus:border-transparent outline-none"
+          />
+          <button
+            type="submit"
+            disabled={submitting || !content.trim()}
+            className="shrink-0 bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
+          >
+            <Send size={14} />
+            {submitting ? '보내는 중...' : '응원하기'}
+          </button>
+        </div>
+        {submitDone && (
+          <p className="text-sm text-rose-500 font-medium animate-fade-in-up">따뜻한 응원 감사합니다!</p>
+        )}
+        <p className="text-xs text-gray-400 text-right">{content.length}/500</p>
+      </form>
+
+      {/* 응원글 목록 */}
+      {cheers.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {cheers.map((cheer, i) => (
+            <div
+              key={cheer.id}
+              className={`p-4 rounded-xl border ${CHEER_COLORS[i % CHEER_COLORS.length]} transition-all hover:scale-[1.02]`}
+            >
+              <p className="text-sm text-gray-700 leading-relaxed mb-2">&ldquo;{cheer.content}&rdquo;</p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-500">- {cheer.nickname}</span>
+                <span className="text-xs text-gray-400">{timeAgo(cheer.createdAt)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {cheers.length === 0 && !loading && (
+        <div className="text-center py-8">
+          <MessageCircle size={32} className="mx-auto text-gray-300 mb-3" />
+          <p className="text-sm text-gray-400">아직 응원글이 없어요. 첫 번째 응원을 남겨주세요!</p>
+        </div>
+      )}
+
+      {hasMore && cheers.length > 0 && (
+        <div className="text-center mt-6">
+          <button
+            onClick={handleLoadMore}
+            disabled={loading}
+            className="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors flex items-center gap-1 mx-auto disabled:opacity-40"
+          >
+            <ChevronDown size={16} />
+            {loading ? '불러오는 중...' : '응원글 더 보기'}
+          </button>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -314,14 +501,16 @@ function HomePage() {
   const handleSearch = async () => {
     if (selectedTags.length === 0 && query.trim() === '') return;
 
-    // 비로그인 세션당 2회 제한
+    // 비로그인 하루 3회 제한 (localStorage + 날짜 기반)
     if (!isLoggedIn) {
-      const count = parseInt(sessionStorage.getItem('searchCount') || '0', 10);
-      if (count >= 2) {
-        setSearchError('비로그인 상태에서는 2번까지만 검색할 수 있어요. 로그인하면 더 많이 검색할 수 있어요!');
+      const today = new Date().toISOString().slice(0, 10);
+      const stored = JSON.parse(localStorage.getItem('searchLimit') || '{}');
+      const count = stored.date === today ? stored.count : 0;
+      if (count >= 3) {
+        setSearchError('비로그인 상태에서는 하루 3번까지만 검색할 수 있어요. 로그인하면 무제한으로 검색할 수 있어요!');
         return;
       }
-      sessionStorage.setItem('searchCount', String(count + 1));
+      localStorage.setItem('searchLimit', JSON.stringify({ date: today, count: count + 1 }));
     }
 
     setStep('loading');
@@ -334,8 +523,11 @@ function HomePage() {
     } catch (err) {
       // 검색 실패 시 비로그인 카운트 롤백
       if (!isLoggedIn) {
-        const count = parseInt(sessionStorage.getItem('searchCount') || '0', 10);
-        if (count > 0) sessionStorage.setItem('searchCount', String(count - 1));
+        const today = new Date().toISOString().slice(0, 10);
+        const stored = JSON.parse(localStorage.getItem('searchLimit') || '{}');
+        if (stored.date === today && stored.count > 0) {
+          localStorage.setItem('searchLimit', JSON.stringify({ date: today, count: stored.count - 1 }));
+        }
       }
       setSearchError(err.response?.data?.message || '검색 중 오류가 발생했습니다.');
       setStep('input');
@@ -359,7 +551,7 @@ function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col">
-      <nav className="flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100 shrink-0">
+      <nav className="flex items-center justify-between px-4 sm:px-8 py-4 bg-white border-b border-gray-100 shrink-0">
         <button
           onClick={() => {
             if (isLoggedIn) {
@@ -412,7 +604,7 @@ function HomePage() {
 
         {/* 검색 입력 뷰 */}
         {(view === 'search' || !isLoggedIn) && step === 'input' && (
-          <div className="bg-white p-10 rounded-2xl shadow-sm border border-gray-100 transition-all">
+          <div className="bg-white p-5 sm:p-10 rounded-2xl shadow-sm border border-gray-100 transition-all">
             {isLoggedIn && (
               <button
                 onClick={() => setView('my-jobs')}
@@ -422,7 +614,7 @@ function HomePage() {
               </button>
             )}
 
-            <h1 className="text-3xl font-bold mb-3 tracking-tight">제가 취준하려고 만든 AI 공고 검색기 🧑‍💻</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-3 tracking-tight">제가 취준하려고 만든 AI 공고 검색기 🧑‍💻</h1>
             <p className="text-gray-500 mb-8 leading-relaxed">
               매번 채용 포털 뒤지기 너무 귀찮아서 주말에 직접 만들었습니다.<br/>
               직군 키워드 고르고, 원하는 조건을 대충 텍스트로 적어주시면 AI가 찰떡같이 찾아드려요! (다들 취뽀 화이팅 🍀)
@@ -514,10 +706,12 @@ function HomePage() {
 
             {!isLoggedIn && (
               <div className="mt-4 text-center">
-                <p className="text-sm text-gray-500 flex items-center justify-center gap-1.5">
-                  <Bell size={14} className="text-blue-500" />
-                  매일 접속해서 검색하기 귀찮으신가요?
-                  <button onClick={login} className="text-blue-600 font-bold hover:underline ml-1">
+                <p className="text-sm text-gray-500 flex flex-col sm:flex-row items-center justify-center gap-1.5">
+                  <span className="flex items-center gap-1.5">
+                    <Bell size={14} className="text-blue-500" />
+                    매일 접속해서 검색하기 귀찮으신가요?
+                  </span>
+                  <button onClick={login} className="text-blue-600 font-bold hover:underline">
                     로그인하고 새 공고 알아서 배달받기
                   </button>
                 </p>
@@ -539,9 +733,9 @@ function HomePage() {
           <div className="animate-fade-in-up flex gap-6 items-start">
             {/* 결과 목록 */}
             <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-end mb-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold mb-1">짜잔! AI가 찾은 추천 공고 🎉</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-1">짜잔! AI가 찾은 추천 공고 🎉</h2>
                   <p className="text-sm text-gray-500">
                     총 {searchResults.totalCount}개 중 매칭률 높은 공고를 뽑았어요.
                     {searchResults.newTodayCount > 0 && (
@@ -565,9 +759,9 @@ function HomePage() {
 
               <div className="space-y-4">
                 {searchResults.jobs.map((job) => (
-                  <div key={job.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex justify-between items-center group">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
+                  <div key={job.id} className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
                         <span className="bg-blue-50 text-blue-700 text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
                           <CheckCircle2 size={12} /> AI 찰떡 지수 {job.match}%
                         </span>
@@ -578,14 +772,14 @@ function HomePage() {
                         🤖 <strong>AI 코멘트:</strong> {job.reason}
                       </p>
                     </div>
-                    <div className="flex flex-col items-end space-y-3">
+                    <div className="mt-4">
                       <a
                         href={job.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="bg-gray-900 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors"
+                        className="bg-gray-900 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors inline-flex items-center gap-1.5"
                       >
-                        공고 보러가기
+                        공고 보러가기 <ExternalLink size={14} />
                       </a>
                     </div>
                   </div>
@@ -612,15 +806,21 @@ function HomePage() {
                   </button>
                 </div>
               )}
+
+              {/* 모바일 전용 - 개발자에게 커피 사주기 */}
+              <CoffeeMobile />
             </div>
 
-            {/* 사이드 - 개발자에게 커피 사주기 */}
+            {/* 사이드 - 개발자에게 커피 사주기 (데스크톱) */}
             <CoffeeSide />
           </div>
         )}
       </main>
 
-      <footer className="bg-gray-900 py-6 mt-8 shrink-0">
+      {/* 응원글 섹션 */}
+      <CheersSection />
+
+      <footer className="bg-gray-900 py-6 shrink-0">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-12">
             <div className="flex items-center space-x-3 text-gray-300">
