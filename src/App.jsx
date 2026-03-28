@@ -835,7 +835,7 @@ function HomePage() {
             <div className="flex items-center space-x-3 text-gray-300">
               <Database size={20} className="text-blue-400" />
               <span className="text-sm font-medium">
-                제가 긁어모은 누적 공고 <strong className="text-white text-lg ml-1">{stats ? stats.totalCount.toLocaleString() : '...'}</strong>개
+                현재 채용 중인 공고 <strong className="text-white text-lg ml-1">{stats ? stats.totalCount.toLocaleString() : '...'}</strong>개
               </span>
             </div>
             <div className="hidden md:block w-px h-6 bg-gray-700"></div>
