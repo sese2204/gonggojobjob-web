@@ -3,7 +3,9 @@ import { getMe } from '../api/auth';
 
 const AuthContext = createContext(null);
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:8080'
+  : 'https://api.job-jub.com';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
