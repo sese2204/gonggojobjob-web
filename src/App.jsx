@@ -11,12 +11,12 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
 
 const TAG_DATA = {
-  '💻 개발': ['Java', 'Spring Boot', 'Python', 'React', 'TypeScript', 'Node.js', 'AWS', 'Docker/K8s', 'AI/ML', 'Flutter', 'Go', '데이터 엔지니어링'],
-  '🎨 기획/디자인': ['서비스 기획', 'UX/UI 디자인', 'Figma', '프로덕트 매니저(PM)', '프로덕트 오너(PO)', '데이터 분석', 'A/B 테스트', 'UX 리서치'],
-  '📈 마케팅/비즈니스': ['퍼포먼스 마케팅', '콘텐츠 마케팅', 'GA4', '브랜드 마케팅', 'CRM', 'SEO', '그로스 해킹', '인플루언서 마케팅'],
-  '💼 경영/사무/인사': ['인사(HR)', '채용 담당자', '재무/회계', '경영기획', '법무', '총무', '조직문화', 'ESG'],
-  '🤝 영업/고객상담': ['국내영업', '해외영업', 'B2B 영업', 'CS(고객지원)', '영업기획', 'CX(고객경험)', '기술영업(SE)'],
-  '📝 미디어/콘텐츠': ['숏폼 콘텐츠', '유튜브 운영', 'SNS운영', '카피라이팅', '영상편집', '브랜드 콘텐츠', 'PR/홍보']
+  '💻 개발': ['프론트엔드', '백엔드', '풀스택', '앱 개발', 'AI/ML 엔지니어', '데이터 엔지니어', 'DevOps/인프라', 'QA/테스트', '게임 개발', '보안 엔지니어', '임베디드/IoT', 'DBA'],
+  '🎨 기획/디자인': ['서비스 기획자', '프로덕트 매니저(PM)', '프로덕트 오너(PO)', 'UX/UI 디자이너', 'UX 리서처', '데이터 분석가', 'BX 디자이너', '그래픽 디자이너'],
+  '📈 마케팅/비즈니스': ['퍼포먼스 마케터', '콘텐츠 마케터', '브랜드 마케터', 'CRM 마케터', '그로스 해커', 'SEO 전문가', '광고 기획자', '사업 개발(BD)'],
+  '💼 경영/사무/인사': ['인사(HR) 담당자', '채용 담당자', '재무/회계', '경영기획', '법무', '총무/사무', '조직문화 담당자', 'ESG 담당자'],
+  '🤝 영업/고객상담': ['국내영업', '해외영업', 'B2B 영업', '기술영업(SE)', '영업기획', 'CS(고객지원)', 'CX(고객경험)', '솔루션 컨설턴트'],
+  '📝 미디어/콘텐츠': ['영상 PD/편집자', '콘텐츠 크리에이터', 'SNS 운영자', '카피라이터', 'PR/홍보 담당자', '에디터/기자', '유튜브 운영자', '팟캐스트 PD']
 };
 
 const PLACEHOLDER_DATA = {
@@ -499,7 +499,10 @@ function HomePage() {
   };
 
   const handleSearch = async () => {
-    if (selectedTags.length === 0 && query.trim() === '') return;
+    if (selectedTags.length === 0) {
+      setSearchError('관심 키워드를 최소 1개 이상 선택해주세요!');
+      return;
+    }
 
     // 비로그인 하루 3회 제한 (localStorage + 날짜 기반)
     if (!isLoggedIn) {
@@ -699,7 +702,12 @@ function HomePage() {
 
             <button
               onClick={handleSearch}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl flex items-center justify-center space-x-2 transition-colors shadow-sm"
+              disabled={selectedTags.length === 0}
+              className={`w-full font-bold py-4 rounded-xl flex items-center justify-center space-x-2 transition-colors shadow-sm ${
+                selectedTags.length === 0
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
             >
               <Search size={20} />
               <span>{selectedTags.length > 0 ? `${selectedTags.length}개 키워드로 ` : ''}내 조건에 맞는 공고 찾아보기</span>
