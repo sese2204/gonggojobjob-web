@@ -564,7 +564,8 @@ function HomePage() {
           }}
           className="text-xl font-extrabold text-blue-600 tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          👀 공고줍줍
+          <img src="/icon.png" alt="공고줍줍" className="w-7 h-7" />
+          공고줍줍
         </button>
         <div className="flex items-center space-x-4">
           {isLoggedIn ? (

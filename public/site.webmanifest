@@ -1,0 +1,21 @@
+{
+  "name": "공고줍줍 - AI 맞춤 채용공고 검색",
+  "short_name": "공고줍줍",
+  "description": "키워드 고르고 조건 적으면, AI가 찰떡 채용공고를 찾아드려요",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#2563EB",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
