@@ -504,17 +504,21 @@ function HomePage() {
       return;
     }
 
-    // 비로그인 하루 3회 제한 (localStorage + 날짜 기반)
-    if (!isLoggedIn) {
-      const today = new Date().toISOString().slice(0, 10);
-      const stored = JSON.parse(localStorage.getItem('searchLimit') || '{}');
-      const count = stored.date === today ? stored.count : 0;
-      if (count >= 3) {
-        setSearchError('비로그인 상태에서는 하루 3번까지만 검색할 수 있어요. 로그인하면 무제한으로 검색할 수 있어요!');
-        return;
-      }
-      localStorage.setItem('searchLimit', JSON.stringify({ date: today, count: count + 1 }));
+    // 하루 검색 횟수 제한: 비로그인 3회, 로그인 5회
+    const limitKey = isLoggedIn ? 'searchLimitLoggedIn' : 'searchLimit';
+    const maxCount = isLoggedIn ? 5 : 3;
+    const today = new Date().toISOString().slice(0, 10);
+    const stored = JSON.parse(localStorage.getItem(limitKey) || '{}');
+    const count = stored.date === today ? stored.count : 0;
+    if (count >= maxCount) {
+      setSearchError(
+        isLoggedIn
+          ? '오늘 검색 횟수(5회)를 모두 사용했어요. 내일 다시 이용해주세요!'
+          : '비로그인 상태에서는 하루 3번까지만 검색할 수 있어요. 로그인하면 하루 5번까지 검색할 수 있어요!'
+      );
+      return;
     }
+    localStorage.setItem(limitKey, JSON.stringify({ date: today, count: count + 1 }));
 
     setStep('loading');
     setSearchError(null);
@@ -524,13 +528,12 @@ function HomePage() {
       setSearchResults(res.data);
       setStep('results');
     } catch (err) {
-      // 검색 실패 시 비로그인 카운트 롤백
-      if (!isLoggedIn) {
-        const today = new Date().toISOString().slice(0, 10);
-        const stored = JSON.parse(localStorage.getItem('searchLimit') || '{}');
-        if (stored.date === today && stored.count > 0) {
-          localStorage.setItem('searchLimit', JSON.stringify({ date: today, count: stored.count - 1 }));
-        }
+      // 검색 실패 시 카운트 롤백
+      const rollbackKey = isLoggedIn ? 'searchLimitLoggedIn' : 'searchLimit';
+      const rollbackStored = JSON.parse(localStorage.getItem(rollbackKey) || '{}');
+      const rollbackToday = new Date().toISOString().slice(0, 10);
+      if (rollbackStored.date === rollbackToday && rollbackStored.count > 0) {
+        localStorage.setItem(rollbackKey, JSON.stringify({ date: rollbackToday, count: rollbackStored.count - 1 }));
       }
       setSearchError(err.response?.data?.message || '검색 중 오류가 발생했습니다.');
       setStep('input');
@@ -694,10 +697,14 @@ function HomePage() {
               <label className="block text-sm font-bold text-gray-700 mb-3">2. AI한테 속마음 말하기 (그냥 편하게 적으세요!)</label>
               <textarea
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => setQuery(e.target.value.slice(0, 500))}
+                maxLength={500}
                 placeholder={PLACEHOLDER_DATA[activeCategory]}
                 className="w-full h-32 p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none transition-shadow text-sm"
               />
+              <p className={`text-xs mt-1 text-right ${query.length >= 500 ? 'text-red-500' : 'text-gray-400'}`}>
+                {query.length}/500
+              </p>
             </div>
 
             <button
