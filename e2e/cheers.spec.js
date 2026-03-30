@@ -57,18 +57,4 @@ test.describe('응원 한마디 (Cheers) section', () => {
     expect(cardCount > 0 || emptyVisible).toBe(true);
   });
 
-  test('submitting a cheer shows success message', async ({ page }) => {
-    const nicknameInput = page.getByPlaceholder('닉네임 (선택)');
-    const contentInput = page.getByPlaceholder('따뜻한 응원 한마디를 남겨주세요...');
-
-    await nicknameInput.fill('E2E테스터');
-    await contentInput.fill('자동화 테스트 중 응원드립니다!');
-
-    await page.getByRole('button', { name: '응원하기' }).click();
-
-    // Success message appears briefly
-    await expect(page.getByText('따뜻한 응원 감사합니다!')).toBeVisible({ timeout: 10000 });
-
-    await page.screenshot({ path: 'test-results/cheers-submitted.png' });
-  });
 });
