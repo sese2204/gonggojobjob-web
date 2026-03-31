@@ -437,9 +437,21 @@ function HomePage() {
   const [searchResults, setSearchResults] = useState(savedState?.searchResults || null);
   const [searchError, setSearchError] = useState(null);
   const [stats, setStats] = useState(null);
+  const [showInAppBrowserModal, setShowInAppBrowserModal] = useState(false);
+
+  const isInAppBrowser = () => {
+    const ua = navigator.userAgent || '';
+    return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|everytime|SamsungBrowser\/\d.*Mobile VR/i.test(ua)
+      || (ua.includes('wv') && ua.includes('Android'))
+      || (window.webkit?.messageHandlers && !/Safari/i.test(ua));
+  };
 
   // 로그인 시 현재 검색 조건을 저장한 뒤 OAuth로 이동
   const login = () => {
+    if (isInAppBrowser()) {
+      setShowInAppBrowserModal(true);
+      return;
+    }
     if (selectedTags.length > 0 || query.trim() !== '') {
       localStorage.setItem('pendingSearch', JSON.stringify({ tags: selectedTags, query }));
     }
@@ -866,6 +878,36 @@ function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* 인앱 브라우저 안내 모달 */}
+      {showInAppBrowserModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowInAppBrowserModal(false)}>
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center">
+              <div className="text-4xl mb-3">🌐</div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">외부 브라우저에서 열어주세요</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                인앱 브라우저에서는 Google 로그인이 제한돼요.<br />
+                아래 방법으로 외부 브라우저에서 열어주세요!
+              </p>
+              <div className="bg-gray-50 rounded-xl p-4 text-left text-sm text-gray-700 space-y-2 mb-4">
+                <p><strong>Android:</strong> 우측 상단 <strong>⋮</strong> → "다른 브라우저로 열기"</p>
+                <p><strong>iPhone:</strong> 하단 <strong>Safari로 열기</strong> 또는 공유 → Safari</p>
+              </div>
+              <div className="flex items-center gap-2 bg-blue-50 rounded-lg p-3 mb-4">
+                <ExternalLink size={16} className="text-blue-500 shrink-0" />
+                <p className="text-xs text-blue-700 text-left">주소창에 <strong>job-jub.com</strong>을 직접 입력해도 돼요!</p>
+              </div>
+              <button
+                onClick={() => setShowInAppBrowserModal(false)}
+                className="w-full py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
