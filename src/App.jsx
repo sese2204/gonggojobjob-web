@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { Search, ChevronRight, CheckCircle2, X, Database, Briefcase, Coffee, Bell, Mail, LogOut, User, Clock, ExternalLink, Heart, Send, MessageCircle, ChevronDown } from 'lucide-react';
+import { Search, ChevronRight, CheckCircle2, X, Database, Briefcase, Coffee, Bell, Mail, Clock, ExternalLink, Heart, Send, MessageCircle, ChevronDown } from 'lucide-react';
+import Nav from './components/Nav';
 import { Link } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { searchJobs, getStats } from './api/jobs';
 import { getRecommendedJobs, deleteRecommendedJob } from './api/searchHistory';
 import { getCheers, postCheer } from './api/cheers';
+import SaveBookmarkButton from './components/SaveBookmarkButton';
+import BookmarksPage from './pages/BookmarksPage';
 import OAuthCallback from './pages/OAuthCallback';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
@@ -230,6 +233,7 @@ function MyRecommendedJobs({ onGoSearch }) {
               >
                 공고 보러가기 <ExternalLink size={14} />
               </a>
+              <SaveBookmarkButton recommendedJobId={job.id} isLoggedIn={true} />
               <button
                 onClick={() => handleDelete(job.id)}
                 disabled={deletingId === job.id}
@@ -424,7 +428,7 @@ function CheersSection() {
 }
 
 function HomePage() {
-  const { isLoggedIn, isLoading, user, login: authLogin, logout } = useAuth();
+  const { isLoggedIn, isLoading, login: authLogin } = useAuth();
 
   // 비로그인 시 sessionStorage에서 검색 결과 복원
   const savedState = !isLoading && !isLoggedIn ? loadSessionState() : null;
@@ -471,7 +475,12 @@ function HomePage() {
       const pending = localStorage.getItem('pendingSearch');
       if (pending) {
         localStorage.removeItem('pendingSearch');
-        const { tags, query: q } = JSON.parse(pending);
+        let tags, q;
+        try {
+          ({ tags, query: q } = JSON.parse(pending));
+        } catch {
+          return;
+        }
         setSelectedTags(tags || []);
         setQuery(q || '');
         setView('search');
@@ -569,51 +578,15 @@ function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col">
-      <nav className="flex items-center justify-between px-4 sm:px-8 py-4 bg-white border-b border-gray-100 shrink-0">
-        <button
-          onClick={() => {
-            if (isLoggedIn) {
-              setView('my-jobs');
-            } else {
-              setStep('input');
-              setSearchResults(null);
-              sessionStorage.removeItem('searchState');
-            }
-          }}
-          className="text-xl font-extrabold text-blue-600 tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity"
-        >
-          <img src="/icon.png" alt="공고줍줍" className="w-7 h-7" />
-          공고줍줍
-        </button>
-        <div className="flex items-center space-x-4">
-          {isLoggedIn ? (
-            <>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                {user?.profileImageUrl ? (
-                  <img src={user.profileImageUrl} alt="" className="w-7 h-7 rounded-full" />
-                ) : (
-                  <User size={18} />
-                )}
-                <span className="font-medium">{user?.name}</span>
-              </div>
-              <button
-                onClick={logout}
-                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-500 transition-colors"
-              >
-                <LogOut size={16} />
-                로그아웃
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={login}
-              className="text-sm px-4 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 font-medium transition-colors flex items-center gap-1.5"
-            >
-              <Bell size={14} /> 새 공고 알림받기
-            </button>
-          )}
-        </div>
-      </nav>
+      <Nav onLogoClick={() => {
+        if (isLoggedIn) {
+          setView('my-jobs');
+        } else {
+          setStep('input');
+          setSearchResults(null);
+          sessionStorage.removeItem('searchState');
+        }
+      }} />
 
       <main className={`w-full mx-auto mt-10 px-4 pb-12 flex-grow ${(view === 'search' || !isLoggedIn) && step === 'results' && searchResults ? 'max-w-6xl' : 'max-w-4xl'}`}>
         {/* 로그인 + 내 추천 공고 뷰 */}
@@ -800,7 +773,7 @@ function HomePage() {
                         🤖 <strong>AI 코멘트:</strong> {job.reason}
                       </p>
                     </div>
-                    <div className="mt-4">
+                    <div className="flex items-center gap-3 mt-4">
                       <a
                         href={job.url}
                         target="_blank"
@@ -809,6 +782,7 @@ function HomePage() {
                       >
                         공고 보러가기 <ExternalLink size={14} />
                       </a>
+                      <SaveBookmarkButton jobListingId={job.id} isLoggedIn={isLoggedIn} onLoginRequired={login} />
                     </div>
                   </div>
                 ))}
@@ -916,6 +890,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/bookmarks" element={<BookmarksPage />} />
       <Route path="/oauth/callback" element={<OAuthCallback />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<Terms />} />
