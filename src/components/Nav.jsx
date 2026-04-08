@@ -38,7 +38,7 @@ export default function Nav({ onLogoClick }) {
               className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-blue-600 transition-colors font-medium"
             >
               <Bookmark size={16} />
-              내 북마크
+              내 공고
             </Link>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               {user?.profileImageUrl ? (

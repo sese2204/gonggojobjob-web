@@ -134,7 +134,7 @@ export default function BookmarksPage() {
         {/* 페이지 헤더 */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6">
           <div>
-            <h1 className="text-2xl font-bold mb-1">내 북마크 📌</h1>
+            <h1 className="text-2xl font-bold mb-1">내 공고 📌</h1>
             <p className="text-sm text-gray-500">
               {totalElements > 0 ? `총 ${totalElements}개의 저장된 공고` : '저장한 공고를 관리하세요'}
             </p>
@@ -169,14 +169,14 @@ export default function BookmarksPage() {
         {initialLoading ? (
           <div className="flex flex-col items-center justify-center h-60 space-y-4">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-            <p className="text-gray-500 text-sm">북마크를 불러오는 중...</p>
+            <p className="text-gray-500 text-sm">공고를 불러오는 중...</p>
           </div>
         ) : bookmarks.length === 0 ? (
           <div className="bg-white p-10 rounded-2xl shadow-sm border border-gray-100 text-center">
             <div className="text-5xl mb-4">📌</div>
             {statusFilter ? (
               <>
-                <h2 className="text-xl font-bold mb-2">이 상태의 북마크가 없어요</h2>
+                <h2 className="text-xl font-bold mb-2">이 상태의 공고가 없어요</h2>
                 <p className="text-gray-500 mb-6">다른 필터를 선택하거나 전체를 확인해보세요.</p>
                 <button
                   onClick={() => handleFilterChange('')}
@@ -227,7 +227,7 @@ export default function BookmarksPage() {
             )}
 
             {!hasMore && bookmarks.length > 0 && (
-              <p className="text-center text-sm text-gray-400 mt-8">모든 북마크를 불러왔습니다</p>
+              <p className="text-center text-sm text-gray-400 mt-8">모든 공고를 불러왔습니다</p>
             )}
           </>
         )}

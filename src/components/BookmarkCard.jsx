@@ -107,7 +107,7 @@ export default function BookmarkCard({ bookmark, onStatusChange, onMemoChange, o
             <button
               onClick={() => setShowDeleteConfirm(true)}
               className="text-gray-400 hover:text-red-500 transition-colors"
-              aria-label="북마크 삭제"
+              aria-label="공고 삭제"
             >
               <Trash2 size={16} />
             </button>
