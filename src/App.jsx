@@ -17,6 +17,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
 import SearchTabs from './components/SearchTabs';
 import RecommendationsSection from './components/RecommendationsSection';
+import MyRecommendedActivities from './components/MyRecommendedActivities';
 import { ACTIVITY_TAG_DATA, ACTIVITY_PLACEHOLDER_DATA } from './constants/activity';
 
 const TAG_DATA = {
@@ -113,7 +114,7 @@ function CoffeeMobile() {
   );
 }
 
-function MyRecommendedJobs({ onGoSearch }) {
+function MyRecommendedJobs({ onGoSearch, onGoActivities }) {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -190,6 +191,19 @@ function MyRecommendedJobs({ onGoSearch }) {
 
   return (
     <div>
+      {/* 공고 / 대외활동 전환 탭 */}
+      <div className="flex gap-2 mb-6">
+        <button className="px-4 py-2 text-sm font-bold rounded-lg text-blue-600 bg-blue-50 border border-blue-200">
+          채용공고
+        </button>
+        <button
+          onClick={onGoActivities}
+          className="px-4 py-2 text-sm font-bold rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 border border-transparent"
+        >
+          대외활동
+        </button>
+      </div>
+
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6">
         <div>
           <h2 className="text-2xl font-bold mb-1 flex items-center gap-2">내 추천 공고 <img src="/char-front.png" alt="" className="w-10 h-10 inline-block" /></h2>
@@ -610,6 +624,7 @@ function HomePage() {
       <Nav onLogoClick={() => {
         if (isLoggedIn) {
           setView('my-jobs');
+          setStep('input');
         } else {
           setStep('input');
           setSearchResults(null);
@@ -620,7 +635,12 @@ function HomePage() {
       <main className={`w-full mx-auto mt-10 px-4 pb-12 flex-grow ${(view === 'search' || !isLoggedIn) && step === 'results' && searchResults ? 'max-w-6xl' : 'max-w-4xl'}`}>
         {/* 로그인 + 내 추천 공고 뷰 */}
         {isLoggedIn && view === 'my-jobs' && (
-          <MyRecommendedJobs onGoSearch={goToSearch} />
+          <MyRecommendedJobs onGoSearch={goToSearch} onGoActivities={() => setView('my-activities')} />
+        )}
+
+        {/* 로그인 + 내 추천 대외활동 뷰 */}
+        {isLoggedIn && view === 'my-activities' && (
+          <MyRecommendedActivities onGoSearch={goToSearch} onGoJobs={() => setView('my-jobs')} />
         )}
 
         {/* 오늘의 추천 섹션 (비로그인 상단) */}

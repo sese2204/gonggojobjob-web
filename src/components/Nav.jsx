@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Bookmark, LogOut, User, Bell, Globe } from 'lucide-react';
+import { Bookmark, LogOut, User, Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Nav({ onLogoClick }) {
@@ -31,25 +31,15 @@ export default function Nav({ onLogoClick }) {
       )}
 
       <div className="flex items-center space-x-4">
-        {isLoggedIn && (
-          <Link
-            to="/activities"
-            className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-blue-600 transition-colors font-medium"
-            title="대외활동"
-          >
-            <Globe size={16} />
-            <span className="hidden sm:inline">대외활동</span>
-          </Link>
-        )}
         {isLoggedIn ? (
           <>
             <Link
               to="/bookmarks"
               className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-blue-600 transition-colors font-medium"
-              title="내 공고"
+              title="저장목록"
             >
               <Bookmark size={16} />
-              <span className="hidden sm:inline">내 공고</span>
+              <span className="hidden sm:inline">저장목록</span>
             </Link>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               {user?.profileImageUrl ? (

@@ -3,7 +3,7 @@ import { Search, Clock } from 'lucide-react';
 import { getRecommendedActivities, deleteRecommendedActivity } from '../api/activitySearchHistory';
 import ActivityCard from './ActivityCard';
 
-export default function MyRecommendedActivities({ onGoSearch }) {
+export default function MyRecommendedActivities({ onGoSearch, onGoJobs }) {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -80,6 +80,21 @@ export default function MyRecommendedActivities({ onGoSearch }) {
 
   return (
     <div>
+      {/* 공고 / 대외활동 전환 탭 */}
+      {onGoJobs && (
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={onGoJobs}
+            className="px-4 py-2 text-sm font-bold rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 border border-transparent"
+          >
+            채용공고
+          </button>
+          <button className="px-4 py-2 text-sm font-bold rounded-lg text-blue-600 bg-blue-50 border border-blue-200">
+            대외활동
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6">
         <div>
           <h2 className="text-2xl font-bold mb-1 flex items-center gap-2">내 추천 활동 <img src="/char-front.png" alt="" className="w-10 h-10 inline-block" /></h2>
