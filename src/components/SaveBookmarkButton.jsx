@@ -10,7 +10,7 @@ const STATES = {
   ERROR: 'error',
 };
 
-export default function SaveBookmarkButton({ jobListingId, recommendedJobId, isLoggedIn, onLoginRequired }) {
+export default function SaveBookmarkButton({ jobListingId, recommendedJobId, activityListingId, recommendedActivityId, isLoggedIn, onLoginRequired }) {
   const [status, setStatus] = useState(STATES.IDLE);
   const timeoutRef = useRef(null);
   const mountedRef = useRef(true);
@@ -39,7 +39,13 @@ export default function SaveBookmarkButton({ jobListingId, recommendedJobId, isL
 
     setStatus(STATES.SAVING);
     try {
-      const body = jobListingId ? { jobListingId } : { recommendedJobId };
+      const body = jobListingId
+        ? { jobListingId }
+        : recommendedJobId
+        ? { recommendedJobId }
+        : activityListingId
+        ? { activityListingId }
+        : { recommendedActivityId };
       await createBookmark(body);
       setStatus(STATES.SAVED);
       revertAfterDelay();

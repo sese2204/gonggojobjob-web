@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Bookmark, LogOut, User, Bell } from 'lucide-react';
+import { Bookmark, LogOut, User, Bell, Globe } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Nav({ onLogoClick }) {
@@ -31,6 +31,15 @@ export default function Nav({ onLogoClick }) {
       )}
 
       <div className="flex items-center space-x-4">
+        {isLoggedIn && (
+          <Link
+            to="/activities"
+            className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-blue-600 transition-colors font-medium"
+          >
+            <Globe size={16} />
+            대외활동
+          </Link>
+        )}
         {isLoggedIn ? (
           <>
             <Link

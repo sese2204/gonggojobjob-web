@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ExternalLink, Trash2, ChevronDown } from 'lucide-react';
+import { ExternalLink, Trash2, ChevronDown, Calendar, Tag } from 'lucide-react';
 import { STATUS_CONFIG } from '../constants/bookmark';
 
 export default function BookmarkCard({ bookmark, onStatusChange, onMemoChange, onDelete }) {
@@ -35,16 +35,35 @@ export default function BookmarkCard({ bookmark, onStatusChange, onMemoChange, o
 
   const statusEntry = STATUS_CONFIG[bookmark.status] || STATUS_CONFIG.NOT_APPLIED;
   const safeUrl = bookmark.url && /^https?:\/\//i.test(bookmark.url) ? bookmark.url : null;
+  const isActivity = bookmark.type === 'ACTIVITY';
+  const expired = isActivity && bookmark.endDate && new Date(bookmark.endDate) < new Date(new Date().toISOString().slice(0, 10));
 
   return (
     <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
       {/* 헤더 */}
       <div className="flex flex-wrap items-center gap-2 mb-2">
+        {isActivity && (
+          <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md font-bold">대외활동</span>
+        )}
         <span className="text-sm text-gray-500 font-medium">{bookmark.company}</span>
+        {isActivity && bookmark.category && (
+          <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+            <Tag size={10} /> {bookmark.category}
+          </span>
+        )}
+        {expired && (
+          <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded-md font-bold">마감됨</span>
+        )}
         <span className="text-xs text-gray-400">
           {new Date(bookmark.bookmarkedAt).toLocaleDateString('ko-KR')} 저장
         </span>
       </div>
+      {isActivity && (bookmark.startDate || bookmark.endDate) && (
+        <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
+          <Calendar size={12} />
+          {bookmark.startDate} ~ {bookmark.endDate}
+        </p>
+      )}
 
       {/* 제목 */}
       <h3 className="text-lg font-bold text-gray-900">

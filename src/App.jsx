@@ -5,13 +5,19 @@ import Nav from './components/Nav';
 import { Link } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { searchJobs, getStats } from './api/jobs';
+import { searchActivities } from './api/activities';
 import { getRecommendedJobs, deleteRecommendedJob } from './api/searchHistory';
 import { getCheers, postCheer } from './api/cheers';
 import SaveBookmarkButton from './components/SaveBookmarkButton';
+import ActivityCard from './components/ActivityCard';
 import BookmarksPage from './pages/BookmarksPage';
+import ActivitiesPage from './pages/ActivitiesPage';
 import OAuthCallback from './pages/OAuthCallback';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
+import SearchTabs from './components/SearchTabs';
+import RecommendationsSection from './components/RecommendationsSection';
+import { ACTIVITY_TAG_DATA, ACTIVITY_PLACEHOLDER_DATA } from './constants/activity';
 
 const TAG_DATA = {
   '💻 개발': ['프론트엔드', '백엔드', '풀스택', '앱 개발', 'AI/ML 엔지니어', '데이터 엔지니어', 'DevOps/인프라', 'QA/테스트', '게임 개발', '보안 엔지니어', '임베디드/IoT', 'DBA'],
@@ -294,7 +300,7 @@ function CheersSection() {
   const fetchCheers = async (pageNum, append = false) => {
     setLoading(true);
     try {
-      const res = await getCheers({ page: pageNum, size: 20 });
+      const res = await getCheers({ page: pageNum, size: 5 });
       const newCheers = res.data.content || [];
       setCheers((prev) => append ? [...prev, ...newCheers] : newCheers);
       setHasMore(!res.data.last);
@@ -437,6 +443,7 @@ function HomePage() {
   const savedState = !isLoading && !isLoggedIn ? loadSessionState() : null;
 
   const [view, setView] = useState(isLoggedIn ? 'my-jobs' : 'search'); // 'my-jobs' | 'search'
+  const [searchTab, setSearchTab] = useState('jobs'); // 'jobs' | 'activities'
   const [step, setStep] = useState(savedState?.step || 'input');
   const [selectedTags, setSelectedTags] = useState([]);
   const [query, setQuery] = useState('');
@@ -529,7 +536,8 @@ function HomePage() {
     }
 
     // 하루 검색 횟수 제한: 비로그인 3회, 로그인 5회
-    const limitKey = isLoggedIn ? 'searchLimitLoggedIn' : 'searchLimit';
+    const limitSuffix = isJobSearch ? '' : 'Activity';
+    const limitKey = isLoggedIn ? `${limitSuffix}searchLimitLoggedIn` : `${limitSuffix}searchLimit`;
     const maxCount = isLoggedIn ? 5 : 3;
     const today = new Date().toISOString().slice(0, 10);
     const stored = JSON.parse(localStorage.getItem(limitKey) || '{}');
@@ -548,16 +556,16 @@ function HomePage() {
     setSearchError(null);
 
     try {
-      const res = await searchJobs({ tags: selectedTags, query });
+      const searchFn = isJobSearch ? searchJobs : searchActivities;
+      const res = await searchFn({ tags: selectedTags, query });
       setSearchResults(res.data);
       setStep('results');
     } catch (err) {
       // 검색 실패 시 카운트 롤백
-      const rollbackKey = isLoggedIn ? 'searchLimitLoggedIn' : 'searchLimit';
-      const rollbackStored = JSON.parse(localStorage.getItem(rollbackKey) || '{}');
+      const rollbackStored = JSON.parse(localStorage.getItem(limitKey) || '{}');
       const rollbackToday = new Date().toISOString().slice(0, 10);
       if (rollbackStored.date === rollbackToday && rollbackStored.count > 0) {
-        localStorage.setItem(rollbackKey, JSON.stringify({ date: rollbackToday, count: rollbackStored.count - 1 }));
+        localStorage.setItem(limitKey, JSON.stringify({ date: rollbackToday, count: rollbackStored.count - 1 }));
       }
       setSearchError(err.response?.data?.message || '검색 중 오류가 발생했습니다.');
       setStep('input');
@@ -570,6 +578,20 @@ function HomePage() {
     setSearchResults(null);
     setSearchError(null);
   };
+
+  const handleSearchTabChange = (tab) => {
+    setSearchTab(tab);
+    setSelectedTags([]);
+    setQuery('');
+    setActiveCategory(tab === 'jobs' ? '💻 개발' : Object.keys(ACTIVITY_TAG_DATA)[0]);
+    setSearchResults(null);
+    setSearchError(null);
+    setStep('input');
+  };
+
+  const currentTagData = searchTab === 'jobs' ? TAG_DATA : ACTIVITY_TAG_DATA;
+  const currentPlaceholder = searchTab === 'jobs' ? PLACEHOLDER_DATA : ACTIVITY_PLACEHOLDER_DATA;
+  const isJobSearch = searchTab === 'jobs';
 
   if (isLoading) {
     return (
@@ -601,6 +623,13 @@ function HomePage() {
           <MyRecommendedJobs onGoSearch={goToSearch} />
         )}
 
+        {/* 오늘의 추천 섹션 (비로그인 상단) */}
+        {!isLoggedIn && step === 'input' && (
+          <div className="mb-6">
+            <RecommendationsSection isLoggedIn={isLoggedIn} onLoginRequired={login} />
+          </div>
+        )}
+
         {/* 검색 입력 뷰 */}
         {(view === 'search' || !isLoggedIn) && step === 'input' && (
           <div className="bg-white p-5 sm:p-10 rounded-2xl shadow-sm border border-gray-100 transition-all">
@@ -613,10 +642,16 @@ function HomePage() {
               </button>
             )}
 
-            <h1 className="text-2xl sm:text-3xl font-bold mb-3 tracking-tight">제가 취준하려고 만든 AI 공고 검색기</h1>
+            <SearchTabs activeTab={searchTab} onTabChange={handleSearchTabChange} />
+
+            <h1 className="text-2xl sm:text-3xl font-bold mb-3 tracking-tight">
+              {isJobSearch ? '제가 취준하려고 만든 AI 공고 검색기' : 'AI 대외활동 검색기'}
+            </h1>
             <p className="text-gray-500 mb-8 leading-relaxed">
-              매번 채용 포털 뒤지기 너무 귀찮아서 주말에 직접 만들었습니다.<br/>
-              직군 키워드 고르고, 원하는 조건을 대충 텍스트로 적어주시면 AI가 찰떡같이 찾아드려요!
+              {isJobSearch
+                ? <>매번 채용 포털 뒤지기 너무 귀찮아서 주말에 직접 만들었습니다.<br/>직군 키워드 고르고, 원하는 조건을 대충 텍스트로 적어주시면 AI가 찰떡같이 찾아드려요!</>
+                : <>공모전, 봉사활동, 서포터즈, 인턴십 등 대외활동을 AI가 찾아드려요!<br/>관심 분야 키워드를 고르고, 원하는 조건을 적어주세요.</>
+              }
             </p>
 
             {searchError && (
@@ -634,10 +669,12 @@ function HomePage() {
             )}
 
             <div className="mb-8">
-              <label className="block text-sm font-bold text-gray-700 mb-3">1. 관심 키워드 콕 집어주세요</label>
+              <label className="block text-sm font-bold text-gray-700 mb-3">
+                {isJobSearch ? '1. 관심 키워드 콕 집어주세요' : '1. 관심 분야 골라주세요'}
+              </label>
 
               <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-100 pb-4">
-                {Object.keys(TAG_DATA).map((category) => (
+                {Object.keys(currentTagData).map((category) => (
                   <button
                     key={category}
                     onClick={() => setActiveCategory(category)}
@@ -653,7 +690,7 @@ function HomePage() {
               </div>
 
               <div className="flex flex-wrap gap-2 mb-6 min-h-[80px] p-2 bg-gray-50/50 rounded-lg">
-                {TAG_DATA[activeCategory].map((tag) => (
+                {(currentTagData[activeCategory] || []).map((tag) => (
                   <button
                     key={tag}
                     onClick={() => toggleTag(tag)}
@@ -686,12 +723,14 @@ function HomePage() {
             </div>
 
             <div className="mb-8">
-              <label className="block text-sm font-bold text-gray-700 mb-3">2. AI한테 속마음 말하기 (그냥 편하게 적으세요!)</label>
+              <label className="block text-sm font-bold text-gray-700 mb-3">
+                {isJobSearch ? '2. AI한테 속마음 말하기 (그냥 편하게 적으세요!)' : '2. 원하는 활동 조건을 적어주세요'}
+              </label>
               <textarea
                 value={query}
                 onChange={(e) => setQuery(e.target.value.slice(0, 500))}
                 maxLength={500}
-                placeholder={PLACEHOLDER_DATA[activeCategory]}
+                placeholder={currentPlaceholder[activeCategory]}
                 className="w-full h-32 p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none transition-shadow text-sm"
               />
               <p className={`text-xs mt-1 text-right ${query.length >= 500 ? 'text-red-500' : 'text-gray-400'}`}>
@@ -709,7 +748,7 @@ function HomePage() {
               }`}
             >
               <Search size={20} />
-              <span>{selectedTags.length > 0 ? `${selectedTags.length}개 키워드로 ` : ''}내 조건에 맞는 공고 찾아보기</span>
+              <span>{selectedTags.length > 0 ? `${selectedTags.length}개 키워드로 ` : ''}내 조건에 맞는 {isJobSearch ? '공고' : '활동'} 찾아보기</span>
             </button>
 
             {!isLoggedIn && (
@@ -720,7 +759,7 @@ function HomePage() {
                     매일 접속해서 검색하기 귀찮으신가요?
                   </span>
                   <button onClick={login} className="text-blue-600 font-bold hover:underline">
-                    로그인하고 새 공고 알아서 배달받기
+                    로그인하고 새 {isJobSearch ? '공고' : '활동'} 알아서 배달받기
                   </button>
                 </p>
               </div>
@@ -735,7 +774,7 @@ function HomePage() {
               <img src="/char-standing.png" alt="검색 중" className="w-full h-full" />
               <img src="/char-sitting.png" alt="" className="w-full h-full" />
             </div>
-            <p className="text-gray-600 font-medium animate-pulse">AI가 열심히 공고를 뒤지는 중입니다... 잠시만요!</p>
+            <p className="text-gray-600 font-medium animate-pulse">AI가 열심히 {isJobSearch ? '공고를 뒤지는' : '활동을 찾는'} 중입니다... 잠시만요!</p>
           </div>
         )}
 
@@ -746,11 +785,13 @@ function HomePage() {
             <div className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold mb-1 flex items-center gap-2">짜잔! AI가 찾은 추천 공고 <img src="/char-standing.png" alt="" className="w-14 h-14 sm:w-16 sm:h-16 inline-block" /></h2>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-1 flex items-center gap-2">
+                    짜잔! AI가 찾은 추천 {isJobSearch ? '공고' : '활동'} <img src="/char-standing.png" alt="" className="w-14 h-14 sm:w-16 sm:h-16 inline-block" />
+                  </h2>
                   <p className="text-sm text-gray-500">
-                    총 {searchResults.totalCount}개 중 매칭률 높은 공고를 뽑았어요.
+                    총 {searchResults.totalCount}개 중 매칭률 높은 {isJobSearch ? '공고를' : '활동을'} 뽑았어요.
                     {searchResults.newTodayCount > 0 && (
-                      <span className="ml-2 text-blue-600 font-medium">오늘 새로 올라온 공고 {searchResults.newTodayCount}개!</span>
+                      <span className="ml-2 text-blue-600 font-medium">오늘 새로 올라온 {isJobSearch ? '공고' : '활동'} {searchResults.newTodayCount}개!</span>
                     )}
                   </p>
                 </div>
@@ -769,7 +810,7 @@ function HomePage() {
               </div>
 
               <div className="space-y-4">
-                {searchResults.jobs.map((job) => (
+                {isJobSearch && searchResults.jobs?.map((job) => (
                   <div key={job.id} className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
                     <div>
                       <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -796,6 +837,15 @@ function HomePage() {
                     </div>
                   </div>
                 ))}
+                {!isJobSearch && searchResults.activities?.map((activity) => (
+                  <ActivityCard
+                    key={activity.id}
+                    activity={activity}
+                    isLoggedIn={isLoggedIn}
+                    onLoginRequired={login}
+                    bookmarkIdField="activityListingId"
+                  />
+                ))}
               </div>
 
               {!isLoggedIn && (
@@ -807,7 +857,7 @@ function HomePage() {
                     </h4>
                     <p className="text-sm text-blue-700 leading-relaxed">
                       매일 들어와서 검색할 필요 없어요! 한 번만 로그인해 두시면,<br className="hidden md:block"/>
-                      제가 <strong>매일 아침 새로 올라온 맞춤 공고만 쏙쏙 골라서</strong> 알려드릴게요.
+                      제가 <strong>매일 아침 새로 올라온 맞춤 {isJobSearch ? '공고만' : '활동만'} 쏙쏙 골라서</strong> 알려드릴게요.
                     </p>
                   </div>
                   <button
@@ -827,6 +877,7 @@ function HomePage() {
             <CoffeeSide />
           </div>
         )}
+
       </main>
 
       {/* 응원글 섹션 */}
@@ -838,14 +889,14 @@ function HomePage() {
             <div className="flex items-center space-x-3 text-gray-300">
               <Database size={20} className="text-blue-400" />
               <span className="text-sm font-medium">
-                현재 채용 중인 공고 <strong className="text-white text-lg ml-1">{stats ? stats.totalCount.toLocaleString() : '...'}</strong>개
+                현재 진행 중인 공고 <strong className="text-white text-lg ml-1">{stats ? ((stats.totalCount || 0) + (stats.activityTotalCount || 0)).toLocaleString() : '...'}</strong>개
               </span>
             </div>
             <div className="hidden md:block w-px h-6 bg-gray-700"></div>
             <div className="flex items-center space-x-3 text-gray-300">
               <Briefcase size={20} className="text-blue-400" />
               <span className="text-sm font-medium">
-                오늘 봇이 새로 주워온 공고 <strong className="text-white text-lg ml-1">{stats ? stats.newTodayCount.toLocaleString() : '...'}</strong>개
+                오늘 봇이 새로 주워온 공고 <strong className="text-white text-lg ml-1">{stats ? ((stats.newTodayCount || 0) + (stats.activityNewTodayCount || 0)).toLocaleString() : '...'}</strong>개
               </span>
             </div>
           </div>
@@ -900,6 +951,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/activities" element={<ActivitiesPage />} />
       <Route path="/bookmarks" element={<BookmarksPage />} />
       <Route path="/oauth/callback" element={<OAuthCallback />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
