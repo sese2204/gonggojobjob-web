@@ -35,9 +35,10 @@ export default function Nav({ onLogoClick }) {
           <Link
             to="/activities"
             className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-blue-600 transition-colors font-medium"
+            title="대외활동"
           >
             <Globe size={16} />
-            대외활동
+            <span className="hidden sm:inline">대외활동</span>
           </Link>
         )}
         {isLoggedIn ? (
@@ -45,9 +46,10 @@ export default function Nav({ onLogoClick }) {
             <Link
               to="/bookmarks"
               className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-blue-600 transition-colors font-medium"
+              title="내 공고"
             >
               <Bookmark size={16} />
-              내 공고
+              <span className="hidden sm:inline">내 공고</span>
             </Link>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               {user?.profileImageUrl ? (
@@ -55,14 +57,15 @@ export default function Nav({ onLogoClick }) {
               ) : (
                 <User size={18} />
               )}
-              <span className="font-medium">{user?.name}</span>
+              <span className="hidden sm:inline font-medium">{user?.name}</span>
             </div>
             <button
               onClick={logout}
               className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-500 transition-colors"
+              title="로그아웃"
             >
               <LogOut size={16} />
-              로그아웃
+              <span className="hidden sm:inline">로그아웃</span>
             </button>
           </>
         ) : (
@@ -70,7 +73,7 @@ export default function Nav({ onLogoClick }) {
             onClick={login}
             className="text-sm px-4 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 font-medium transition-colors flex items-center gap-1.5"
           >
-            <Bell size={14} /> 새 공고 알림받기
+            <Bell size={14} /> <span className="hidden sm:inline">새 공고 알림받기</span><span className="sm:hidden">알림받기</span>
           </button>
         )}
       </div>
