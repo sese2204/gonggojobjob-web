@@ -155,8 +155,11 @@ function MyRecommendedJobs({ onGoSearch }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-60 space-y-4">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+      <div className="flex flex-col items-center justify-center h-60 space-y-3">
+        <div className="char-loading w-32 h-32 drop-shadow-md">
+              <img src="/char-standing.png" alt="로딩 중" className="w-full h-full" />
+              <img src="/char-sitting.png" alt="" className="w-full h-full" />
+            </div>
         <p className="text-gray-500 text-sm">내 추천 공고를 불러오는 중...</p>
       </div>
     );
@@ -165,7 +168,7 @@ function MyRecommendedJobs({ onGoSearch }) {
   if (isEmpty) {
     return (
       <div className="bg-white p-10 rounded-2xl shadow-sm border border-gray-100 text-center">
-        <div className="text-5xl mb-4">🔍</div>
+        <img src="/char-sitting.png" alt="공고 없음" className="w-36 h-36 mx-auto mb-4 drop-shadow-md" />
         <h2 className="text-xl font-bold mb-2">아직 추천받은 공고가 없어요</h2>
         <p className="text-gray-500 mb-6">AI 검색을 해보면 추천 공고가 여기에 쌓여요!</p>
         <button
@@ -183,7 +186,7 @@ function MyRecommendedJobs({ onGoSearch }) {
     <div>
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6">
         <div>
-          <h2 className="text-2xl font-bold mb-1">내 추천 공고 📋</h2>
+          <h2 className="text-2xl font-bold mb-1 flex items-center gap-2">내 추천 공고 <img src="/char-front.png" alt="" className="w-10 h-10 inline-block" /></h2>
           <p className="text-sm text-gray-500">AI가 매칭해준 공고들이에요.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -570,8 +573,12 @@ function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 gap-3">
+        <div className="char-loading w-36 h-36 drop-shadow-lg">
+              <img src="/char-standing.png" alt="로딩 중" className="w-full h-full" />
+              <img src="/char-sitting.png" alt="" className="w-full h-full" />
+            </div>
+        <p className="text-sm text-gray-400">잠시만 기다려주세요...</p>
       </div>
     );
   }
@@ -606,10 +613,10 @@ function HomePage() {
               </button>
             )}
 
-            <h1 className="text-2xl sm:text-3xl font-bold mb-3 tracking-tight">제가 취준하려고 만든 AI 공고 검색기 🧑‍💻</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-3 tracking-tight">제가 취준하려고 만든 AI 공고 검색기</h1>
             <p className="text-gray-500 mb-8 leading-relaxed">
               매번 채용 포털 뒤지기 너무 귀찮아서 주말에 직접 만들었습니다.<br/>
-              직군 키워드 고르고, 원하는 조건을 대충 텍스트로 적어주시면 AI가 찰떡같이 찾아드려요! (다들 취뽀 화이팅 🍀)
+              직군 키워드 고르고, 원하는 조건을 대충 텍스트로 적어주시면 AI가 찰떡같이 찾아드려요!
             </p>
 
             {searchError && (
@@ -723,9 +730,12 @@ function HomePage() {
 
         {/* 로딩 */}
         {(view === 'search' || !isLoggedIn) && step === 'loading' && (
-          <div className="flex flex-col items-center justify-center h-80 space-y-5">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="text-gray-600 font-medium animate-pulse">AI가 열심히 공고를 뒤지는 중입니다... 잠시만요! 🏃💨</p>
+          <div className="flex flex-col items-center justify-center h-80 space-y-4">
+            <div className="char-loading w-40 h-40 drop-shadow-lg">
+              <img src="/char-standing.png" alt="검색 중" className="w-full h-full" />
+              <img src="/char-sitting.png" alt="" className="w-full h-full" />
+            </div>
+            <p className="text-gray-600 font-medium animate-pulse">AI가 열심히 공고를 뒤지는 중입니다... 잠시만요!</p>
           </div>
         )}
 
@@ -736,7 +746,7 @@ function HomePage() {
             <div className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold mb-1">짜잔! AI가 찾은 추천 공고 🎉</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-1 flex items-center gap-2">짜잔! AI가 찾은 추천 공고 <img src="/char-standing.png" alt="" className="w-14 h-14 sm:w-16 sm:h-16 inline-block" /></h2>
                   <p className="text-sm text-gray-500">
                     총 {searchResults.totalCount}개 중 매칭률 높은 공고를 뽑았어요.
                     {searchResults.newTodayCount > 0 && (
@@ -858,7 +868,7 @@ function HomePage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowInAppBrowserModal(false)}>
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="text-center">
-              <div className="text-4xl mb-3">🌐</div>
+              <img src="/char-sitting.png" alt="" className="w-28 h-28 mx-auto mb-3 drop-shadow-md" />
               <h3 className="text-lg font-bold text-gray-800 mb-2">외부 브라우저에서 열어주세요</h3>
               <p className="text-sm text-gray-600 mb-4">
                 인앱 브라우저에서는 Google 로그인이 제한돼요.<br />

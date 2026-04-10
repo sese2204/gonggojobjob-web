@@ -120,8 +120,12 @@ export default function BookmarksPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 gap-3">
+        <div className="char-loading w-36 h-36 drop-shadow-lg">
+              <img src="/char-standing.png" alt="로딩 중" className="w-full h-full" />
+              <img src="/char-sitting.png" alt="" className="w-full h-full" />
+            </div>
+        <p className="text-sm text-gray-400">잠시만 기다려주세요...</p>
       </div>
     );
   }
@@ -134,7 +138,7 @@ export default function BookmarksPage() {
         {/* 페이지 헤더 */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6">
           <div>
-            <h1 className="text-2xl font-bold mb-1">내 공고 📌</h1>
+            <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">내 공고 <img src="/char-front.png" alt="" className="w-10 h-10 inline-block" /></h1>
             <p className="text-sm text-gray-500">
               {totalElements > 0 ? `총 ${totalElements}개의 저장된 공고` : '저장한 공고를 관리하세요'}
             </p>
@@ -167,13 +171,16 @@ export default function BookmarksPage() {
 
         {/* 목록 */}
         {initialLoading ? (
-          <div className="flex flex-col items-center justify-center h-60 space-y-4">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+          <div className="flex flex-col items-center justify-center h-60 space-y-3">
+            <div className="char-loading w-32 h-32 drop-shadow-md">
+              <img src="/char-standing.png" alt="로딩 중" className="w-full h-full" />
+              <img src="/char-sitting.png" alt="" className="w-full h-full" />
+            </div>
             <p className="text-gray-500 text-sm">공고를 불러오는 중...</p>
           </div>
         ) : bookmarks.length === 0 ? (
           <div className="bg-white p-10 rounded-2xl shadow-sm border border-gray-100 text-center">
-            <div className="text-5xl mb-4">📌</div>
+            <img src="/char-sitting.png" alt="공고 없음" className="w-36 h-36 mx-auto mb-4 drop-shadow-md" />
             {statusFilter ? (
               <>
                 <h2 className="text-xl font-bold mb-2">이 상태의 공고가 없어요</h2>

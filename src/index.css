@@ -1,1 +1,63 @@
 @import "tailwindcss";
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gentle-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* 로딩 캐릭터: 두 이미지가 번갈아 나타남 */
+@keyframes char-frame-a {
+  0%, 45% { opacity: 1; }
+  50%, 95% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes char-frame-b {
+  0%, 45% { opacity: 0; }
+  50%, 95% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes char-bob {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-4px); }
+  75% { transform: translateY(2px); }
+}
+
+.char-loading {
+  position: relative;
+  animation: char-bob 1.2s ease-in-out infinite;
+}
+
+.char-loading img:first-child {
+  animation: char-frame-a 1.6s ease-in-out infinite;
+}
+
+.char-loading img:last-child {
+  position: absolute;
+  inset: 0;
+  animation: char-frame-b 1.6s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out;
+}
+
+.animate-gentle-bounce {
+  animation: gentle-bounce 1.5s ease-in-out infinite;
+}
