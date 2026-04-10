@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Search } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getBookmarks, updateBookmark, deleteBookmark } from '../api/bookmarks';
-import { STATUS_FILTERS } from '../constants/bookmark';
+import { STATUS_FILTERS, TYPE_FILTERS } from '../constants/bookmark';
 import Nav from '../components/Nav';
 import BookmarkCard from '../components/BookmarkCard';
 import CustomJobModal from '../components/CustomJobModal';
@@ -20,6 +20,7 @@ export default function BookmarksPage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
   const [totalElements, setTotalElements] = useState(0);
   const [showCustomModal, setShowCustomModal] = useState(false);
   const fetchIdRef = useRef(0);
@@ -30,6 +31,7 @@ export default function BookmarksPage() {
     try {
       const params = { page: pageNum, size: PAGE_SIZE };
       if (filter) params.status = filter;
+      if (typeFilter) params.type = typeFilter;
       const res = await getBookmarks(params);
 
       if (currentFetchId !== fetchIdRef.current) return;
@@ -48,7 +50,7 @@ export default function BookmarksPage() {
         setInitialLoading(false);
       }
     }
-  }, []);
+  }, [typeFilter]);
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
@@ -62,7 +64,7 @@ export default function BookmarksPage() {
       setInitialLoading(true);
       fetchBookmarks(0, statusFilter, false);
     }
-  }, [isLoggedIn, isLoading, statusFilter, navigate, fetchBookmarks]);
+  }, [isLoggedIn, isLoading, statusFilter, typeFilter, navigate, fetchBookmarks]);
 
   const handleLoadMore = () => {
     if (loading || !hasMore) return;
@@ -74,6 +76,12 @@ export default function BookmarksPage() {
   const handleFilterChange = (filter) => {
     if (filter === statusFilter) return;
     setStatusFilter(filter);
+    setPage(0);
+  };
+
+  const handleTypeFilterChange = (filter) => {
+    if (filter === typeFilter) return;
+    setTypeFilter(filter);
     setPage(0);
   };
 
@@ -150,6 +158,23 @@ export default function BookmarksPage() {
             <Plus size={16} />
             공고 직접 추가
           </button>
+        </div>
+
+        {/* 타입 필터 */}
+        <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-hide">
+          {TYPE_FILTERS.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => handleTypeFilterChange(key)}
+              className={`px-4 py-2 text-sm font-bold rounded-lg whitespace-nowrap transition-colors ${
+                typeFilter === key
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* 상태 필터 탭 */}

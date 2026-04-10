@@ -14,3 +14,9 @@ export const STATUS_FILTERS = [
   { key: 'REJECTED',     label: '불합격' },
   { key: 'OFFERED',      label: '합격' },
 ];
+
+export const TYPE_FILTERS = [
+  { key: '',         label: '전체' },
+  { key: 'JOB',      label: '채용공고' },
+  { key: 'ACTIVITY', label: '대외활동' },
+];
