@@ -314,7 +314,7 @@ function CheersSection() {
   const fetchCheers = async (pageNum, append = false) => {
     setLoading(true);
     try {
-      const res = await getCheers({ page: pageNum, size: 5 });
+      const res = await getCheers({ page: pageNum, size: 6 });
       const newCheers = res.data.content || [];
       setCheers((prev) => append ? [...prev, ...newCheers] : newCheers);
       setHasMore(!res.data.last);
