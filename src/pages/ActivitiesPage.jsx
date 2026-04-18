@@ -214,7 +214,7 @@ export default function ActivitiesPage() {
 
             <h1 className="text-2xl sm:text-3xl font-bold mb-3 tracking-tight">AI 대외활동 검색기</h1>
             <p className="text-gray-500 mb-8 leading-relaxed">
-              공모전, 봉사활동, 서포터즈, 인턴십 등 대외활동을 AI가 찾아드려요!<br/>
+              공모전, 봉사활동, 서포터즈 등 대외활동을 AI가 찾아드려요!<br/>
               관심 분야 키워드를 고르고, 원하는 조건을 적어주세요.
             </p>
 
