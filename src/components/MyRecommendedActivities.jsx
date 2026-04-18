@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, Clock } from 'lucide-react';
 import { getRecommendedActivities, deleteRecommendedActivity } from '../api/activitySearchHistory';
 import ActivityCard from './ActivityCard';
+import FeedbackButtons from './FeedbackButtons';
 
 export default function MyRecommendedActivities({ onGoSearch, onGoJobs }) {
   const [activities, setActivities] = useState([]);
@@ -111,6 +112,7 @@ export default function MyRecommendedActivities({ onGoSearch, onGoJobs }) {
           <select
             value={sortBy}
             onChange={(e) => { setSortBy(e.target.value); setPage(0); }}
+            aria-label="정렬 기준"
             className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="matchScore,desc">매칭률 높은 순</option>
@@ -134,13 +136,9 @@ export default function MyRecommendedActivities({ onGoSearch, onGoJobs }) {
               isLoggedIn={true}
               bookmarkIdField="recommendedActivityId"
             />
-            <button
-              onClick={() => handleDelete(activity.id)}
-              disabled={deletingId === activity.id}
-              className="absolute top-4 right-4 text-sm text-gray-400 hover:text-red-500 font-medium transition-colors disabled:opacity-50"
-            >
-              {deletingId === activity.id ? '삭제 중...' : '삭제'}
-            </button>
+            <div className="absolute top-4 right-4">
+              <FeedbackButtons onDelete={() => handleDelete(activity.id)} />
+            </div>
           </div>
         ))}
       </div>

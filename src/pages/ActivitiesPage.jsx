@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, ChevronRight, CheckCircle2, X, Database, Briefcase, Coffee, Bell, Mail, ExternalLink } from 'lucide-react';
 import Nav from '../components/Nav';
@@ -8,6 +8,11 @@ import { getStats } from '../api/jobs';
 import MyRecommendedActivities from '../components/MyRecommendedActivities';
 import ActivityCard from '../components/ActivityCard';
 import SearchTabs from '../components/SearchTabs';
+import SearchQuotaIndicator from '../components/SearchQuotaIndicator';
+import SearchLoadingScreen from '../components/SearchLoadingScreen';
+import useSearchQuota from '../hooks/useSearchQuota';
+import useHistoryState from '../hooks/useHistoryState';
+import useRecentSearches from '../hooks/useRecentSearches';
 import { ACTIVITY_TAG_DATA, ACTIVITY_PLACEHOLDER_DATA } from '../constants/activity';
 
 function loadSessionState() {
@@ -42,6 +47,12 @@ export default function ActivitiesPage() {
   const [searchError, setSearchError] = useState(null);
   const [stats, setStats] = useState(null);
   const [showInAppBrowserModal, setShowInAppBrowserModal] = useState(false);
+
+  const quota = useSearchQuota(isLoggedIn, 'activities');
+  const abortRef = useRef(null);
+
+  useHistoryState({ view, step, setView, setStep });
+  const recentSearches = useRecentSearches();
 
   const isInAppBrowser = () => {
     const ua = navigator.userAgent || '';
@@ -121,12 +132,7 @@ export default function ActivitiesPage() {
       return;
     }
 
-    const limitKey = isLoggedIn ? 'activitySearchLimitLoggedIn' : 'activitySearchLimit';
-    const maxCount = isLoggedIn ? 5 : 3;
-    const today = new Date().toISOString().slice(0, 10);
-    const stored = JSON.parse(localStorage.getItem(limitKey) || '{}');
-    const count = stored.date === today ? stored.count : 0;
-    if (count >= maxCount) {
+    if (quota.isExhausted) {
       setSearchError(
         isLoggedIn
           ? '오늘 검색 횟수(5회)를 모두 사용했어요. 내일 다시 이용해주세요!'
@@ -134,30 +140,39 @@ export default function ActivitiesPage() {
       );
       return;
     }
-    localStorage.setItem(limitKey, JSON.stringify({ date: today, count: count + 1 }));
+    quota.increment();
 
+    abortRef.current = new AbortController();
     setStep('loading');
     setSearchError(null);
 
     try {
-      const res = await searchActivities({ tags: selectedTags, query });
+      const res = await searchActivities({ tags: selectedTags, query }, { signal: abortRef.current.signal });
       setSearchResults(res.data);
       setStep('results');
+      recentSearches.save(selectedTags, query, 'activities');
     } catch (err) {
-      const rollbackStored = JSON.parse(localStorage.getItem(limitKey) || '{}');
-      const rollbackToday = new Date().toISOString().slice(0, 10);
-      if (rollbackStored.date === rollbackToday && rollbackStored.count > 0) {
-        localStorage.setItem(limitKey, JSON.stringify({ date: rollbackToday, count: rollbackStored.count - 1 }));
-      }
+      if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
+      quota.rollback();
       setSearchError(err.response?.data?.message || '검색 중 오류가 발생했습니다.');
       setStep('input');
+    } finally {
+      abortRef.current = null;
     }
+  };
+
+  const handleCancelSearch = () => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    quota.rollback();
+    setStep('input');
   };
 
   const goToSearch = () => {
     setView('search');
     setStep('input');
-    setSearchResults(null);
     setSearchError(null);
   };
 
@@ -220,10 +235,12 @@ export default function ActivitiesPage() {
             <div className="mb-8">
               <label className="block text-sm font-bold text-gray-700 mb-3">1. 관심 분야 골라주세요</label>
 
-              <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-100 pb-4">
+              <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-100 pb-4" role="tablist" aria-label="키워드 카테고리">
                 {Object.keys(ACTIVITY_TAG_DATA).map((category) => (
                   <button
                     key={category}
+                    role="tab"
+                    aria-selected={activeCategory === category}
                     onClick={() => setActiveCategory(category)}
                     className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${
                       activeCategory === category
@@ -236,11 +253,12 @@ export default function ActivitiesPage() {
                 ))}
               </div>
 
-              <div className="flex flex-wrap gap-2 mb-6 min-h-[80px] p-2 bg-gray-50/50 rounded-lg">
+              <div className="flex flex-wrap gap-2 mb-6 min-h-[80px] p-2 bg-gray-50/50 rounded-lg" role="tabpanel" aria-label={`${activeCategory} 키워드`}>
                 {ACTIVITY_TAG_DATA[activeCategory].map((tag) => (
                   <button
                     key={tag}
                     onClick={() => toggleTag(tag)}
+                    aria-pressed={selectedTags.includes(tag)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                       selectedTags.includes(tag)
                         ? 'bg-blue-600 text-white shadow-md'
@@ -259,7 +277,7 @@ export default function ActivitiesPage() {
                     {selectedTags.map(tag => (
                       <span key={tag} className="flex items-center space-x-1 bg-white border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-sm shadow-sm">
                         <span>{tag}</span>
-                        <button onClick={() => removeTag(tag)} className="hover:text-red-500 hover:bg-blue-50 rounded-full p-0.5 transition-colors">
+                        <button onClick={() => removeTag(tag)} aria-label={`${tag} 제거`} className="hover:text-red-500 hover:bg-blue-50 rounded-full p-0.5 transition-colors">
                           <X size={14} />
                         </button>
                       </span>
@@ -285,9 +303,9 @@ export default function ActivitiesPage() {
 
             <button
               onClick={handleSearch}
-              disabled={selectedTags.length === 0}
+              disabled={selectedTags.length === 0 || quota.isExhausted}
               className={`w-full font-bold py-4 rounded-xl flex items-center justify-center space-x-2 transition-colors shadow-sm ${
-                selectedTags.length === 0
+                selectedTags.length === 0 || quota.isExhausted
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700 text-white'
               }`}
@@ -295,6 +313,17 @@ export default function ActivitiesPage() {
               <Search size={20} />
               <span>{selectedTags.length > 0 ? `${selectedTags.length}개 키워드로 ` : ''}내 조건에 맞는 활동 찾아보기</span>
             </button>
+
+            <SearchQuotaIndicator remaining={quota.remaining} maxCount={quota.maxCount} isLoggedIn={isLoggedIn} />
+
+            {searchResults && (
+              <button
+                onClick={() => setStep('results')}
+                className="w-full mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium py-2 flex items-center justify-center gap-1"
+              >
+                이전 검색 결과 다시 보기 <ChevronRight size={14} />
+              </button>
+            )}
 
             {!isLoggedIn && (
               <div className="mt-4 text-center">
@@ -309,18 +338,35 @@ export default function ActivitiesPage() {
                 </p>
               </div>
             )}
+
+            {recentSearches.searches.filter((s) => s.searchTab === 'activities').length > 0 && (
+              <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <p className="text-xs font-bold text-gray-500 mb-2">최근 검색 조건</p>
+                <div className="flex flex-col gap-2">
+                  {recentSearches.searches
+                    .filter((s) => s.searchTab === 'activities')
+                    .map((s, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setSelectedTags(s.tags);
+                          setQuery(s.query);
+                        }}
+                        className="text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors"
+                      >
+                        <span className="font-medium">{s.tags.join(', ')}</span>
+                        {s.query && <span className="text-gray-400 ml-2 truncate">— {s.query}</span>}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* 로딩 */}
         {(view === 'search' || !isLoggedIn) && step === 'loading' && (
-          <div className="flex flex-col items-center justify-center h-80 space-y-4">
-            <div className="char-loading w-40 h-40 drop-shadow-lg">
-              <img src="/char-standing.png" alt="검색 중" className="w-full h-full" />
-              <img src="/char-sitting.png" alt="" className="w-full h-full" />
-            </div>
-            <p className="text-gray-600 font-medium animate-pulse">AI가 열심히 활동을 찾는 중입니다... 잠시만요!</p>
-          </div>
+          <SearchLoadingScreen onCancel={handleCancelSearch} searchType="activities" />
         )}
 
         {/* 검색 결과 */}

@@ -26,7 +26,15 @@ export default function ActivityCard({ activity, isLoggedIn, onLoginRequired, bo
             <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded-md font-bold">마감됨</span>
           )}
         </div>
-        <h3 className="text-lg font-bold group-hover:text-blue-600 transition-colors cursor-pointer">{activity.title}</h3>
+        <h3 className="text-lg font-bold group-hover:text-blue-600 transition-colors">
+          {activity.url ? (
+            <a href={activity.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+              {activity.title}
+            </a>
+          ) : (
+            activity.title
+          )}
+        </h3>
         {(activity.startDate || activity.endDate) && (
           <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
             <Calendar size={12} />
