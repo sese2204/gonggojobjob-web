@@ -95,6 +95,7 @@ export default function BookmarkCard({ bookmark, onStatusChange, onMemoChange, o
             <select
               value={bookmark.status}
               onChange={(e) => onStatusChange(bookmark.id, e.target.value)}
+              aria-label="지원 상태"
               className={`appearance-none text-xs font-bold px-3 py-1.5 pr-7 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${statusEntry.color}`}
             >
               {Object.entries(STATUS_CONFIG).map(([key, { label }]) => (

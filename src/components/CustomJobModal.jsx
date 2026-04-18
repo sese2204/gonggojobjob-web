@@ -26,11 +26,26 @@ export default function CustomJobModal({ isOpen, onClose, onSubmit }) {
 
   useEffect(() => {
     if (!isOpen) return;
-    const handleEsc = (e) => {
-      if (e.key === 'Escape') onClose();
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key === 'Tab') {
+        const modal = document.getElementById('custom-job-modal');
+        if (!modal) return;
+        const focusable = modal.querySelectorAll('input, textarea, button, [tabindex]:not([tabindex="-1"])');
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -69,11 +84,11 @@ export default function CustomJobModal({ isOpen, onClose, onSubmit }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="custom-job-modal-title" onClick={onClose}>
+      <div id="custom-job-modal" className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-bold text-gray-800">공고 직접 추가</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+          <h3 id="custom-job-modal-title" className="text-lg font-bold text-gray-800">공고 직접 추가</h3>
+          <button onClick={onClose} aria-label="모달 닫기" className="text-gray-400 hover:text-gray-600 transition-colors">
             <X size={20} />
           </button>
         </div>
