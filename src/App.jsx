@@ -460,6 +460,7 @@ function HomePage() {
   const [selectedTags, setSelectedTags] = useState([]);
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('💻 개발');
+  const [catKey, setCatKey] = useState(0);
   const [searchResults, setSearchResults] = useState(savedState?.searchResults || null);
   const [searchError, setSearchError] = useState(null);
   const [stats, setStats] = useState(null);
@@ -604,6 +605,7 @@ function HomePage() {
     setSelectedTags([]);
     setQuery('');
     setActiveCategory(tab === 'jobs' ? '💻 개발' : Object.keys(ACTIVITY_TAG_DATA)[0]);
+    setCatKey((k) => k + 1);
     setSearchResults(null);
     setSearchError(null);
     setStep('input');
@@ -704,7 +706,10 @@ function HomePage() {
                     key={category}
                     role="tab"
                     aria-selected={activeCategory === category}
-                    onClick={() => setActiveCategory(category)}
+                    onClick={() => {
+                      setActiveCategory(category);
+                      setCatKey((k) => k + 1);
+                    }}
                     className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${
                       activeCategory === category
                         ? 'text-blue-600 bg-blue-50 border border-blue-200'
@@ -717,12 +722,13 @@ function HomePage() {
               </div>
 
               <div className="flex flex-wrap gap-2 mb-6 min-h-[80px] p-2 bg-gray-50/50 rounded-lg" role="tabpanel" aria-label={`${activeCategory} 키워드`}>
-                {(currentTagData[activeCategory] || []).map((tag) => (
+                {(currentTagData[activeCategory] || []).map((tag, i) => (
                   <button
-                    key={tag}
+                    key={`${catKey}-${tag}`}
                     onClick={() => toggleTag(tag)}
                     aria-pressed={selectedTags.includes(tag)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                    style={{ animationDelay: `${i * 40}ms` }}
+                    className={`pill-enter px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                       selectedTags.includes(tag)
                         ? 'bg-blue-600 text-white shadow-md'
                         : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200 shadow-sm'
@@ -769,10 +775,10 @@ function HomePage() {
             <button
               onClick={handleSearch}
               disabled={selectedTags.length === 0 || quota.isExhausted}
-              className={`w-full font-bold py-4 rounded-xl flex items-center justify-center space-x-2 transition-colors shadow-sm ${
+              className={`w-full font-bold py-4 rounded-xl flex items-center justify-center space-x-2 shadow-sm transition-all duration-[250ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] ${
                 selectedTags.length === 0 || quota.isExhausted
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(37,99,235,0.38)] active:translate-y-0 active:scale-[0.99]'
               }`}
             >
               <Search size={20} />
@@ -894,7 +900,7 @@ function HomePage() {
                   </div>
                   <button
                     onClick={login}
-                    className="w-full md:w-auto bg-blue-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-blue-700 shadow-md transition-all hover:scale-105 whitespace-nowrap"
+                    className="w-full md:w-auto bg-blue-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-blue-700 shadow-md hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(37,99,235,0.38)] active:translate-y-0 active:scale-[0.99] transition-all duration-[250ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] whitespace-nowrap"
                   >
                     3초만에 가입하고 알림 받기
                   </button>
