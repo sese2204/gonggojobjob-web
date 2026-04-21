@@ -12,13 +12,16 @@ const STATES = {
 
 export default function SaveBookmarkButton({ jobListingId, recommendedJobId, activityListingId, recommendedActivityId, isLoggedIn, onLoginRequired }) {
   const [status, setStatus] = useState(STATES.IDLE);
+  const [popping, setPopping] = useState(false);
   const timeoutRef = useRef(null);
+  const popTimeoutRef = useRef(null);
   const mountedRef = useRef(true);
 
   useEffect(() => {
     return () => {
       mountedRef.current = false;
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (popTimeoutRef.current) clearTimeout(popTimeoutRef.current);
     };
   }, []);
 
@@ -36,6 +39,12 @@ export default function SaveBookmarkButton({ jobListingId, recommendedJobId, act
     }
 
     if (status === STATES.SAVING) return;
+
+    if (popTimeoutRef.current) clearTimeout(popTimeoutRef.current);
+    setPopping(true);
+    popTimeoutRef.current = setTimeout(() => {
+      if (mountedRef.current) setPopping(false);
+    }, 500);
 
     setStatus(STATES.SAVING);
     try {
@@ -93,7 +102,7 @@ export default function SaveBookmarkButton({ jobListingId, recommendedJobId, act
     <button
       onClick={handleClick}
       disabled={status === STATES.SAVING}
-      className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors inline-flex items-center gap-1.5 ${current.className}`}
+      className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors inline-flex items-center gap-1.5 ${current.className} ${popping ? 'bookmark-pop' : ''}`}
     >
       {current.icon}
       {current.text}

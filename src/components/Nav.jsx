@@ -1,31 +1,56 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Bookmark, LogOut, User, Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
+function PawLogo() {
+  return (
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <ellipse cx="15" cy="22" rx="6.5" ry="5" fill="#2563EB" />
+      <ellipse cx="6.8" cy="15.2" rx="2.3" ry="2.9" fill="#2563EB" />
+      <ellipse cx="11.8" cy="10" rx="2.3" ry="2.9" fill="#2563EB" />
+      <ellipse cx="18.2" cy="10" rx="2.3" ry="2.9" fill="#2563EB" />
+      <ellipse cx="23.2" cy="15.2" rx="2.3" ry="2.9" fill="#2563EB" />
+      <ellipse cx="15" cy="22.5" rx="3.8" ry="2.8" fill="#60A5FA" opacity="0.35" />
+    </svg>
+  );
+}
+
 export default function Nav({ onLogoClick }) {
   const { user, isLoggedIn, login, logout } = useAuth();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const logoContent = (
     <>
-      <img src="/icon.png" alt="공고줍줍" className="w-7 h-7" />
-      공고줍줍
+      <PawLogo />
+      <span className="text-xl font-extrabold text-gray-900 tracking-tight" style={{ letterSpacing: '-0.04em' }}>
+        공고<span className="text-blue-600">줍줍</span>
+      </span>
     </>
   );
 
+  const logoClassName = 'flex items-center gap-2 hover:opacity-80 transition-opacity';
+  const logoStyle = { whiteSpace: 'nowrap' };
+
   return (
-    <nav className="flex items-center justify-between px-4 sm:px-8 py-4 bg-white border-b border-gray-100 shrink-0">
+    <nav
+      className={`sticky top-0 z-50 border-b border-gray-100 flex items-center justify-between px-4 sm:px-8 py-4 shrink-0 transition-all duration-300 ${
+        scrolled ? 'bg-white/90 backdrop-blur-md' : 'bg-white'
+      }`}
+    >
       {onLogoClick ? (
-        <button
-          onClick={onLogoClick}
-          className="text-xl font-extrabold text-blue-600 tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity"
-        >
+        <button onClick={onLogoClick} className={logoClassName} style={logoStyle}>
           {logoContent}
         </button>
       ) : (
-        <Link
-          to="/"
-          className="text-xl font-extrabold text-blue-600 tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity"
-        >
+        <Link to="/" className={logoClassName} style={logoStyle}>
           {logoContent}
         </Link>
       )}

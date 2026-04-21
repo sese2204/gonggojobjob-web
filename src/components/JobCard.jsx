@@ -32,7 +32,7 @@ export default function JobCard({ job, variant = 'search', isLoggedIn, onLoginRe
     : { jobListingId: job.id };
 
   return (
-    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+    <div className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-[0_8px_32px_rgba(37,99,235,0.10)] hover:-translate-y-0.5 hover:border-blue-200 transition-all duration-[280ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] group">
       <div>
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <span className="bg-blue-50 text-blue-700 text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
