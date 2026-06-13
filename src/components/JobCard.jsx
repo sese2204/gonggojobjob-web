@@ -26,6 +26,11 @@ export default function JobCard({ job, variant = 'search', isLoggedIn, onLoginRe
   const matchScore = variant === 'recommended' ? job.matchScore : job.match;
   const expired = isExpired(job.deadline);
   const dDay = getDDay(job.deadline);
+  const badgeClass = matchScore >= 80
+    ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white'
+    : matchScore >= 65
+    ? 'bg-gradient-to-r from-blue-100 to-indigo-200 text-blue-800'
+    : 'bg-blue-50 text-blue-700';
 
   const bookmarkProps = variant === 'recommended'
     ? { recommendedJobId: job.id }
@@ -35,7 +40,7 @@ export default function JobCard({ job, variant = 'search', isLoggedIn, onLoginRe
     <div className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-[0_8px_32px_rgba(37,99,235,0.10)] hover:-translate-y-0.5 hover:border-blue-200 transition-all duration-[280ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] group">
       <div>
         <div className="flex flex-wrap items-center gap-2 mb-2">
-          <span className="bg-blue-50 text-blue-700 text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
+          <span className={`text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 ${badgeClass}`}>
             <CheckCircle2 size={12} /> AI 찰떡 지수 {matchScore}%
           </span>
           <span className="text-sm text-gray-500 font-medium">{job.company}</span>

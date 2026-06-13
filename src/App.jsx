@@ -409,11 +409,11 @@ function CheersSection() {
 
       {/* 응원글 목록 */}
       {cheers.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="columns-1 sm:columns-2 gap-3">
           {cheers.map((cheer, i) => (
             <div
               key={cheer.id}
-              className={`p-4 rounded-xl border ${CHEER_COLORS[i % CHEER_COLORS.length]} transition-all hover:scale-[1.02]`}
+              className={`break-inside-avoid mb-3 p-4 rounded-xl border ${CHEER_COLORS[i % CHEER_COLORS.length]} transition-all hover:scale-[1.02]`}
             >
               <p className="text-sm text-gray-700 leading-relaxed mb-2">&ldquo;{cheer.content}&rdquo;</p>
               <div className="flex items-center justify-between">
@@ -627,7 +627,7 @@ function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col">
+    <div className="min-h-screen bg-canvas text-gray-800 flex flex-col">
       <Nav onLogoClick={() => {
         if (isLoggedIn) {
           setView('my-jobs');
@@ -659,7 +659,9 @@ function HomePage() {
 
         {/* 검색 입력 뷰 */}
         {(view === 'search' || !isLoggedIn) && step === 'input' && (
-          <div className="bg-white p-5 sm:p-10 rounded-2xl shadow-sm border border-gray-100 transition-all">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 transition-all overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-blue-600 to-indigo-500" />
+            <div className="p-5 sm:p-10">
             {isLoggedIn && (
               <button
                 onClick={() => setView('my-jobs')}
@@ -672,7 +674,11 @@ function HomePage() {
             <SearchTabs activeTab={searchTab} onTabChange={handleSearchTabChange} />
 
             <h1 className="text-2xl sm:text-3xl font-bold mb-3 tracking-tight">
-              {isJobSearch ? '제가 취준하려고 만든 AI 공고 검색기' : 'AI 대외활동 검색기'}
+              {isJobSearch ? (
+                <>제가 취준하려고 만든 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">AI 공고 검색기</span></>
+              ) : (
+                <><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">AI</span> 대외활동 검색기</>
+              )}
             </h1>
             <p className="text-gray-500 mb-8 leading-relaxed">
               {isJobSearch
@@ -730,7 +736,7 @@ function HomePage() {
                     style={{ animationDelay: `${i * 40}ms` }}
                     className={`pill-enter px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                       selectedTags.includes(tag)
-                        ? 'bg-blue-600 text-white shadow-md'
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-md shadow-blue-200'
                         : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200 shadow-sm'
                     }`}
                   >
@@ -832,6 +838,7 @@ function HomePage() {
                 </div>
               </div>
             )}
+            </div>
           </div>
         )}
 
@@ -921,7 +928,9 @@ function HomePage() {
       {/* 응원글 섹션 */}
       <CheersSection />
 
-      <footer className="bg-gray-900 py-6 shrink-0">
+      <footer className="bg-gray-900 py-6 shrink-0 relative overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
+        <img src="/char-sitting.png" alt="" aria-hidden="true" className="absolute bottom-0 right-6 w-20 h-20 opacity-[0.07] pointer-events-none select-none" />
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-12">
             <div className="flex items-center space-x-3 text-gray-300">

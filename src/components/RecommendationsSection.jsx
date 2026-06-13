@@ -10,7 +10,7 @@ function CompactJobCard({ job, isLoggedIn, onLoginRequired }) {
       href={job.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="shrink-0 w-56 bg-gray-50 rounded-xl p-3.5 hover:bg-blue-50 transition-colors group block"
+      className="shrink-0 w-56 bg-white rounded-xl p-3.5 ring-1 ring-gray-200 hover:ring-blue-300 hover:shadow-md transition-all duration-200 group block"
     >
       <div className="flex items-center gap-1.5 mb-1.5">
         <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5">
@@ -41,7 +41,7 @@ function CompactActivityCard({ activity, isLoggedIn, onLoginRequired }) {
       href={activity.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="shrink-0 w-56 bg-gray-50 rounded-xl p-3.5 hover:bg-blue-50 transition-colors group block"
+      className="shrink-0 w-56 bg-white rounded-xl p-3.5 ring-1 ring-gray-200 hover:ring-blue-300 hover:shadow-md transition-all duration-200 group block"
     >
       <div className="flex items-center gap-1.5 mb-1.5">
         <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5">
